@@ -1,0 +1,33 @@
+name: Tester
+
+# Kjører poeng-testene på alle pull requests (og ved push til main), så du ser
+# grønt før merge.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sjekk ut koden
+        uses: actions/checkout@v4
+
+      - name: Sett opp Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      # 'npm install' i rota trigger postinstall som installerer API-avhengighetene.
+      - name: Installer avhengigheter
+        run: npm install
+
+      - name: Kjør tester
+        run: npm test
