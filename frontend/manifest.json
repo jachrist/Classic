@@ -1,0 +1,13 @@
+{
+  "name": "Classic — gjett den klassiske musikken",
+  "short_name": "Classic",
+  "description": "Flerspiller-gjettelek om klassisk musikk, spilt fra mobil.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12100f",
+  "theme_color": "#12100f",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

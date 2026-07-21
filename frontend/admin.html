@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#12100f" />
+  <title>Classic — musikkbibliotek</title>
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="logo">🎼</span> <span>Classic <b>· Admin</b></span></a>
+    <span class="spacer"></span>
+    <button id="themeBtn" class="icon-btn" title="Bytt tema" aria-label="Bytt tema">☀️</button>
+  </header>
+
+  <main class="wrap">
+    <h1>Musikkbibliotek</h1>
+    <p class="lead">Stykkene spill-lederen trekker fra. Legg til Spotify-lenke for innebygd avspilling.</p>
+    <div id="msg"></div>
+
+    <section class="card">
+      <h2 id="formTitle">Nytt stykke</h2>
+      <form id="pieceForm">
+        <input id="pId" type="hidden" />
+        <div class="grid-2">
+          <div>
+            <label for="pComposer">Komponist</label>
+            <input id="pComposer" type="text" required placeholder="F.eks. Ludwig van Beethoven" />
+          </div>
+          <div>
+            <label for="pYear">Årstall</label>
+            <input id="pYear" type="number" required min="500" max="2100" placeholder="1808" />
+          </div>
+        </div>
+        <label for="pEpoch">Epoke / stil</label>
+        <select id="pEpoch" required></select>
+        <label for="pWork">Verk</label>
+        <input id="pWork" type="text" required placeholder="Symfoni nr. 5 c-moll" />
+        <label for="pMovement">Sats <span class="hint">(valgfritt)</span></label>
+        <input id="pMovement" type="text" placeholder="1. sats – Allegro con brio" />
+        <label for="pSpotify">Spotify-lenke <span class="hint">(track/album-URL — valgfritt)</span></label>
+        <input id="pSpotify" type="url" placeholder="https://open.spotify.com/track/..." />
+        <div id="spotifyHelp" class="muted" style="font-size:.82rem;margin-top:6px"></div>
+        <div style="height:14px"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" type="submit" id="saveBtn">Legg til</button>
+          <button class="btn btn-ghost" type="button" id="resetBtn" style="display:none">Avbryt</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Bibliotek (<span id="count">0</span>)</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Komponist</th><th>År</th><th>Epoke</th><th>Verk</th><th>🎧</th><th></th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>
