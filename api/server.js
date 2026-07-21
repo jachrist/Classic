@@ -48,7 +48,27 @@ app.use('/api', (req, res) => {
   res.status(404).json({ success: false, error: 'Ukjent endepunkt' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🎼 Classic-API kjører på http://localhost:${PORT}`);
-  console.log(`   Database: ${db.DB_PATH}`);
+// Finn LAN-adresser (nyttig for testing fra mobil/iPad på samme Wi-Fi)
+function lanAddresses() {
+  const os = require('os');
+  const out = [];
+  for (const list of Object.values(os.networkInterfaces())) {
+    for (const net of list || []) {
+      if (net.family === 'IPv4' && !net.internal) out.push(net.address);
+    }
+  }
+  return out;
+}
+
+app.listen(PORT, '0.0.0.0', () => {
+  const servesFrontend = !!process.env.FRONTEND_DIR;
+  console.log(`\n🎼 Classic kjører på port ${PORT}`);
+  console.log(`   Lokalt:   http://localhost:${PORT}`);
+  for (const ip of lanAddresses()) {
+    console.log(`   Nettverk: http://${ip}:${PORT}   ← åpne denne i Safari på iPad`);
+  }
+  if (!servesFrontend) {
+    console.log('   (Tips: sett FRONTEND_DIR=../frontend i .env for å teste alt fra én adresse)');
+  }
+  console.log(`   Database: ${db.DB_PATH}\n`);
 });
