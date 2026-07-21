@@ -84,6 +84,48 @@ az webapp up --name classic-<UNIKT-NAVN> --resource-group classic-rg
   `az webapp ssh` eller Kudu (`https://classic-<UNIKT-NAVN>.scm.azurewebsites.net`).
 - **Slette alt igjen:** `az group delete --name classic-rg --yes`
 
+## Auto-deploy med GitHub Actions
+
+Arbeidsflyten `.github/workflows/deploy-azure.yml` bygger, kjører testene og
+deployer automatisk ved **push til `main`** (og kan kjøres manuelt via
+Actions → «Run workflow»).
+
+**Engangsoppsett:**
+
+1. **Opprett app-en først** (Actions oppdaterer en app som finnes fra før):
+   ```bash
+   APP_NAME=classic-<UNIKT-NAVN> ./deploy/azure-appservice.sh
+   ```
+
+2. **Skru av server-side bygg** (Actions bygger alt i CI og laster opp ferdig
+   `node_modules` — samme plattform, linux-x64):
+   ```bash
+   az webapp config appsettings set --name classic-<UNIKT-NAVN> \
+     --resource-group classic-rg \
+     --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
+   ```
+
+3. **Hent publish-profilen** (legitimasjon for deploy):
+   ```bash
+   az webapp deployment list-publishing-profiles \
+     --name classic-<UNIKT-NAVN> --resource-group classic-rg --xml
+   ```
+   Kopier hele XML-utskriften.
+
+4. **Legg inn i GitHub** (repoets *Settings → Secrets and variables → Actions*):
+   - Fanen **Variables** → *New repository variable*:
+     `AZURE_WEBAPP_NAME` = `classic-<UNIKT-NAVN>`
+   - Fanen **Secrets** → *New repository secret*:
+     `AZURE_WEBAPP_PUBLISH_PROFILE` = XML-en fra steg 3
+
+5. **Merge til `main`** (eller kjør workflow manuelt). Hver push til `main`
+   deployer nå automatisk. Følg med i **Actions**-fanen.
+
+> **Sikrere alternativ (uten langlivet hemmelighet):** bruk OIDC med
+> `azure/login@v2` + føderert legitimasjon i stedet for publish-profil. Da byttes
+> `publish-profile`-linja ut med et `azure/login`-steg. Publish-profil er enklest
+> å komme i gang med; OIDC anbefales for delte/produksjonsrepo.
+
 ## Feilsøking
 - *Bygg feiler på `better-sqlite3`* → sjekk at runtime er `NODE:22-lts` og at
   `SCM_DO_BUILD_DURING_DEPLOYMENT=true` er satt; se byggelogg i Kudu.
