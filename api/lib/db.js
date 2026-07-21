@@ -19,7 +19,12 @@ const DB_PATH = process.env.SQLITE_DB_PATH || path.join(__dirname, '..', 'data',
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
+// Journalmodus er konfigurerbar: WAL er raskest lokalt, men på Azure App Service
+// ligger /home på et SMB-volum (Azure Files) der WAL kan gi låsefeil — sett da
+// SQLITE_JOURNAL_MODE=DELETE.
+const ALLOWED_JOURNAL = ['WAL', 'DELETE', 'TRUNCATE', 'PERSIST', 'MEMORY', 'OFF'];
+const journalMode = (process.env.SQLITE_JOURNAL_MODE || 'WAL').toUpperCase();
+db.pragma(`journal_mode = ${ALLOWED_JOURNAL.includes(journalMode) ? journalMode : 'WAL'}`);
 db.pragma('foreign_keys = ON');
 
 /**

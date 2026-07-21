@@ -1,0 +1,14 @@
+{
+  "name": "classic",
+  "version": "1.0.0",
+  "description": "Classic — flerspiller-gjettelek med klassisk musikk. Rot-manifest for Azure App Service (bygg + oppstart).",
+  "private": true,
+  "scripts": {
+    "start": "node api/server.js",
+    "postinstall": "npm install --prefix api --omit=dev",
+    "test": "npm test --prefix api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -38,4 +38,21 @@ cd frontend && python3 -m http.server 3000                   # http://localhost:
 Biblioteket seedes automatisk med ~30 kjente stykker. Legg inn Spotify-lenker
 via **⚙️ Admin** for innebygd avspilling.
 
-Se `CLAUDE.md` for arkitektur og `deploy/README.md` for drift.
+### Teste fra mobil/iPad
+Kjør i én-prosess-modus (API-et serverer også frontend, samme adresse for alt):
+```bash
+cd api && npm install && cp .env.example .env
+echo "FRONTEND_DIR=../frontend" >> .env && npm start
+```
+Serveren skriver ut en `Nettverk: http://<din-ip>:3001`-adresse — åpne den i
+Safari på iPaden (samme Wi-Fi). Da kan du være spill-leder på PC-en og deltaker
+på iPaden.
+
+### Kjøre i skyen (uten egen server)
+`deploy/azure-appservice.md` viser hvordan du legger hele appen på **Azure App
+Service** (gratis F1-nivå, HTTPS inkludert). Kortversjon:
+```bash
+APP_NAME=classic-<unikt-navn> ./deploy/azure-appservice.sh
+```
+
+Se `CLAUDE.md` for arkitektur og `deploy/README.md` for drift på egen Ubuntu-server.
