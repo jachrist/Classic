@@ -43,6 +43,7 @@ export const api = {
   createPiece: (p) => request('/pieces', { method: 'POST', body: p }),
   updatePiece: (id, p) => request(`/pieces/${id}`, { method: 'PUT', body: p }),
   deletePiece: (id) => request(`/pieces/${id}`, { method: 'DELETE' }),
+  resolveSpotify: (theme) => request('/pieces/resolve-spotify', { method: 'POST', body: { theme } }),
 
   // Spill
   createGame: (leaderName, durationSec, theme) =>

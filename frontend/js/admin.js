@@ -155,6 +155,27 @@ function renderTable() {
 
 $('#filterTheme').addEventListener('change', (e) => { filterThemeName = e.target.value; renderTable(); });
 
+$('#resolveBtn').addEventListener('click', async () => {
+  const scope = filterThemeName || 'alle tema';
+  const missing = (filterThemeName ? pieces.filter((p) => p.theme === filterThemeName) : pieces).filter((p) => !p.spotifyUrl).length;
+  if (!missing) return toast('Ingen manglende lenker her', 'ok');
+  if (!confirm(`Slå opp Spotify-lenker for ${missing} stykke(r) i ${scope}? Dette kan ta litt tid.`)) return;
+  const btn = $('#resolveBtn');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Slår opp…';
+  try {
+    const r = await api.resolveSpotify(filterThemeName || undefined);
+    toast(`Fant ${r.resolved} av ${r.total} lenker (metode: ${r.method}).`, r.resolved ? 'ok' : 'err');
+    await load();
+  } catch (err) {
+    toast(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+});
+
 function formData() {
   const kind = kindOfTheme($('#pTheme').value);
   const field2 = kind === 'pop' ? $('#pAlbum').value.trim() : $('#pEpoch').value;

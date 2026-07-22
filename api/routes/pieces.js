@@ -6,6 +6,7 @@ const db = require('../lib/db');
 const { successResponse, errorResponse, generateId, validateRequired, now } = require('../lib/helpers');
 const { EPOCHS } = require('../lib/epochs');
 const { KINDS, kindOf } = require('../lib/kinds');
+const { resolveMany } = require('../lib/spotify-resolve');
 
 /** Finn tematype ut fra temanavn (default klassisk). */
 function themeKind(themeName) {
@@ -58,6 +59,26 @@ router.get('/meta', (req, res) => {
     composers: field1Options,
     epochs: field2Options,
   });
+});
+
+/**
+ * POST /api/pieces/resolve-spotify — slå opp manglende Spotify-lenker automatisk
+ * (server-side, krever åpen internett-tilgang). Body/spm: { theme?, limit?, all? }.
+ * Fyller kun inn stykker uten lenke, med mindre all=true.
+ */
+router.post('/resolve-spotify', async (req, res) => {
+  const themeName = req.body.theme || req.query.theme || null;
+  const onlyMissing = !(req.body.all === true || req.query.all === 'true');
+  const limit = Math.max(1, Math.min(50, parseInt(req.body.limit || req.query.limit, 10) || 25));
+  const pieces = db.listEntities('pieces', themeName ? { filter: { theme: themeName } } : {});
+  try {
+    const result = await resolveMany(pieces, { onlyMissing, limit }, (piece, url) => {
+      db.upsertEntity('pieces', 'piece', piece.id, { ...piece, spotifyUrl: url, updatedAt: now() });
+    });
+    successResponse(res, result);
+  } catch (err) {
+    errorResponse(res, 'Oppslag feilet: ' + (err.message || 'ukjent feil'), 502);
+  }
 });
 
 /** GET /api/pieces/:id */
