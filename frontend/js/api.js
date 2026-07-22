@@ -56,6 +56,8 @@ export const api = {
   },
   startRound: (code, leaderToken, opts = {}) =>
     request(`/games/${code}/start-round`, { method: 'POST', leaderToken, body: opts }),
+  beginRound: (code, leaderToken) =>
+    request(`/games/${code}/begin-round`, { method: 'POST', leaderToken }),
   guess: (code, guess) => request(`/games/${code}/guess`, { method: 'POST', body: guess }),
   reveal: (code, leaderToken) => request(`/games/${code}/reveal`, { method: 'POST', leaderToken }),
   finish: (code, leaderToken) => request(`/games/${code}/finish`, { method: 'POST', leaderToken }),

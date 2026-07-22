@@ -1,8 +1,35 @@
 import { api } from './api.js';
 import { $, el, qs, escapeHtml, toast, initTheme, registerSW, store } from './util.js';
+import { warningSound, endSound } from './sound.js';
 
 initTheme();
 registerSW();
+
+// Lokal sekund-teller (presis nedtelling + lydsignaler)
+let ticker = null;
+let tickWarned = false;
+let tickEnded = false;
+function stopTicker() { if (ticker) { clearInterval(ticker); ticker = null; } }
+function startTicker(round) {
+  stopTicker();
+  tickWarned = false;
+  tickEnded = false;
+  const endsAtMs = new Date(round.endsAt).getTime();
+  const dur = round.durationSec || 60;
+  const step = () => {
+    const rem = Math.max(0, Math.ceil((endsAtMs - Date.now()) / 1000));
+    const num = $('#timerNum'); if (num) num.textContent = String(rem);
+    const bar = $('#timerBar');
+    if (bar) {
+      bar.firstChild.style.width = Math.max(0, Math.min(100, (rem / dur) * 100)) + '%';
+      bar.classList.toggle('low', rem <= 10);
+    }
+    if (rem <= 10 && rem > 0 && !tickWarned) { tickWarned = true; warningSound(); }
+    if (rem <= 0 && !tickEnded) { tickEnded = true; endSound(); stopTicker(); }
+  };
+  step();
+  ticker = setInterval(step, 250);
+}
 
 const view = $('#view');
 const code = (qs('code') || (store.get('classic-player') || {}).code || '').toUpperCase();
@@ -98,15 +125,17 @@ function render(s) {
   const phase = `${status}:${round ? round.status : 'none'}:${round ? round.id : ''}`;
   if (phase !== lastStatus) {
     lastStatus = phase;
+    stopTicker();
     if (status === 'finished') return renderFinished(s);
-    if (!round || (status === 'lobby' && !round)) return renderLobby(s);
+    if (!round) return renderLobby(s);
+    if (round.status === 'pending') return renderPending(s);
     if (round.status === 'active') return renderActive(s);
     if (round.status === 'revealed') return renderReveal(s);
   } else {
-    // Lett oppdatering (timer, spillerliste, gjettetall)
+    // Lett oppdatering (spillerliste, gjettetall) — timeren drives av startTicker
     if (round && round.status === 'active') updateActive(s);
     if (round && round.status === 'revealed') updateLeaderboardOnly(s);
-    if (!round) updateLobby(s);
+    if (!round || round.status === 'pending') updateLobby(s);
   }
 }
 
@@ -140,6 +169,17 @@ function updateLobby(s) {
   const hint = $('#lobbyHint');
   const parent = plist && plist.previousElementSibling;
   if (parent) parent.textContent = `Deltakere (${s.players.length})`;
+}
+
+// Runden er klargjort — vent på at lederen starter tiden
+function renderPending(s) {
+  view.innerHTML = '';
+  view.append(el('div', { class: 'card center fade-in' }, [
+    el('div', { class: 'logo', style: 'width:52px;height:52px;font-size:30px;margin:0 auto 10px' }, '🎵'),
+    el('h2', {}, 'Gjør deg klar!'),
+    el('p', { class: 'muted' }, `Runde ${s.round.roundNumber} starter straks — lytt etter musikken.`),
+  ]));
+  view.append(el('div', { class: 'card' }, [el('h2', {}, `Deltakere (${s.players.length})`), el('div', { id: 'plist' }, playersList(s))]));
 }
 
 function field2Options(selected) {
@@ -211,10 +251,14 @@ function renderActive(s) {
   const yearInput = $('#gYear');
   yearInput.addEventListener('input', () => { $('#yearOut').textContent = yearInput.value; localGuess.year = +yearInput.value; });
   ['gComposer', 'gEpoch', 'gWork', 'gMovement'].forEach((id) => {
-    $('#' + id).addEventListener('input', captureLocal);
+    const node = $('#' + id); // #gMovement finnes ikke i pop-modus
+    if (node) node.addEventListener('input', captureLocal);
   });
   form.addEventListener('submit', submitGuess);
   captureLocal();
+
+  // Start lokal nedtelling + lydsignaler
+  startTicker(r);
 }
 
 function captureLocal() {
@@ -245,15 +289,7 @@ async function submitGuess(e) {
 }
 
 function updateActive(s) {
-  const r = s.round;
-  const num = $('#timerNum');
-  if (num) num.textContent = String(r.timeLeft);
-  const bar = $('#timerBar');
-  if (bar) {
-    const pct = Math.max(0, Math.min(100, (r.timeLeft / r.durationSec) * 100));
-    bar.firstChild.style.width = pct + '%';
-    bar.classList.toggle('low', r.timeLeft <= 10);
-  }
+  // Timeren drives av den lokale telleren (startTicker); her oppdaterer vi kun stillingen
   const plist = $('#plist');
   if (plist) { plist.innerHTML = ''; plist.append(playersList(s)); }
 }
