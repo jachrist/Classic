@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#12100f" />
-  <title>Classic — gjett den klassiske musikken</title>
+  <title>Classic — bli med i spillet</title>
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/css/style.css" />
@@ -17,14 +17,12 @@
   </header>
 
   <main class="wrap">
-    <h1>Gjett den klassiske musikken</h1>
-    <p class="lead">Spill-lederen spiller et utdrag — dere gjetter komponist, epoke, årstall, verk og sats fra hver deres mobil. Nærmest vinner.</p>
+    <h1>Bli med i spillet 🎵</h1>
+    <p class="lead">Skriv inn romkoden du har fått av spill-lederen og et kallenavn, så er du med. Dere gjetter musikken fra hver deres mobil — nærmest vinner!</p>
 
     <div id="msg"></div>
 
     <section class="card">
-      <h2>Bli med i et spill</h2>
-      <p class="sub">Har du fått en romkode av spill-lederen?</p>
       <form id="joinForm">
         <label for="code">Romkode</label>
         <input id="code" class="code-input" type="text" inputmode="latin" maxlength="4" autocomplete="off" placeholder="ABCD" required />
@@ -34,15 +32,6 @@
         <button class="btn btn-primary" type="submit">Bli med 🎶</button>
       </form>
     </section>
-
-    <section class="card tap" id="leaderCard">
-      <h2>Jeg er spill-leder →</h2>
-      <p class="sub">Start et nytt spill, få en romkode og styr rundene fra én skjerm (koblet til høyttaler).</p>
-    </section>
-
-    <p class="center" style="margin-top:22px">
-      <a class="pill" href="/admin.html">⚙️ Administrer musikkbibliotek</a>
-    </p>
   </main>
 
   <script type="module" src="/js/index.js"></script>
