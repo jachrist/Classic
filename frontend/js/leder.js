@@ -121,7 +121,8 @@ function spotifyCard(piece) {
       el('h2', {}, '🎧 Avspilling'),
       el('div', { class: 'spotify-embed' },
         el('iframe', { src: embed, height: '152', allow: 'encrypted-media; autoplay', loading: 'lazy' })),
-      el('p', { class: 'muted', style: 'font-size:.82rem;margin:0' }, 'Trykk play. Logg inn i Spotify for full lengde; ellers spilles ~30 sek utdrag.'),
+      el('p', { class: 'muted', style: 'font-size:.82rem;margin:6px 0 10px' }, 'Innebygd spiller gir ~30 sek utdrag. For full lengde: åpne i Spotify-appen (premium):'),
+      el('a', { class: 'btn btn-ghost', href: piece.spotifyUrl, target: '_blank', rel: 'noopener' }, '▶ Åpne i Spotify-appen (full lengde)'),
     ]);
   }
   return el('div', { class: 'card' }, [
