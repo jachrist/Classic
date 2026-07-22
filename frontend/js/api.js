@@ -44,6 +44,7 @@ export const api = {
   updatePiece: (id, p) => request(`/pieces/${id}`, { method: 'PUT', body: p }),
   deletePiece: (id) => request(`/pieces/${id}`, { method: 'DELETE' }),
   resolveSpotify: (theme) => request('/pieces/resolve-spotify', { method: 'POST', body: { theme } }),
+  netCheck: () => request('/pieces/net-check'),
 
   // Spill
   createGame: (leaderName, durationSec, theme) =>
@@ -55,6 +56,8 @@ export const api = {
   },
   startRound: (code, leaderToken, opts = {}) =>
     request(`/games/${code}/start-round`, { method: 'POST', leaderToken, body: opts }),
+  beginRound: (code, leaderToken) =>
+    request(`/games/${code}/begin-round`, { method: 'POST', leaderToken }),
   guess: (code, guess) => request(`/games/${code}/guess`, { method: 'POST', body: guess }),
   reveal: (code, leaderToken) => request(`/games/${code}/reveal`, { method: 'POST', leaderToken }),
   finish: (code, leaderToken) => request(`/games/${code}/finish`, { method: 'POST', leaderToken }),

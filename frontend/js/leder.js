@@ -1,5 +1,6 @@
 import { api } from './api.js';
 import { $, el, escapeHtml, toast, initTheme, registerSW, store, spotifyEmbedUrl, spotifySearchUrl } from './util.js';
+import { warningSound, endSound, unlockAudio } from './sound.js';
 
 initTheme();
 registerSW();
@@ -10,6 +11,32 @@ let pollTimer = null;
 let lastPhase = null;
 let lastPieceKey = null;
 let busy = false;
+
+// Lokal sekund-teller (presis nedtelling + lydsignaler)
+let ticker = null;
+let tickWarned = false;
+let tickEnded = false;
+function stopTicker() { if (ticker) { clearInterval(ticker); ticker = null; } }
+function startTicker(round) {
+  stopTicker();
+  tickWarned = false;
+  tickEnded = false;
+  const endsAtMs = new Date(round.endsAt).getTime();
+  const dur = round.durationSec || 60;
+  const step = () => {
+    const rem = Math.max(0, Math.ceil((endsAtMs - Date.now()) / 1000));
+    const num = $('#timerNum'); if (num) num.textContent = String(rem);
+    const bar = $('#timerBar');
+    if (bar) {
+      bar.firstChild.style.width = Math.max(0, Math.min(100, (rem / dur) * 100)) + '%';
+      bar.classList.toggle('low', rem <= 10);
+    }
+    if (rem <= 10 && rem > 0 && !tickWarned) { tickWarned = true; warningSound(); }
+    if (rem <= 0 && !tickEnded) { tickEnded = true; endSound(); stopTicker(); }
+  };
+  step();
+  ticker = setInterval(step, 250);
+}
 
 // --- Opprett spill ---
 async function renderCreate() {
@@ -165,6 +192,7 @@ function answerCard(piece) {
 
 function fullRender(s) {
   view.innerHTML = '';
+  stopTicker();
   const status = s.game.status;
   const round = s.round;
 
@@ -195,6 +223,12 @@ function fullRender(s) {
     }
     controls.append(el('button', { class: 'btn btn-primary', id: 'startBtn', onclick: startRound },
       round ? '▶ Neste runde (tilfeldig)' : '▶ Start runde (tilfeldig)'));
+  } else if (round.status === 'pending') {
+    // Runden er klargjort — lederen cuer musikken, deretter startes tiden
+    controls.append(el('div', { class: 'center' }, el('span', { class: 'pill accent' }, `Runde ${round.roundNumber} — klar`)));
+    controls.append(el('p', { class: 'center muted' }, '🔊 Start musikken på Spotify, og trykk så «Start tiden».'));
+    controls.append(el('button', { class: 'btn btn-primary', id: 'beginBtn', onclick: beginRound },
+      `▶ Start tiden (${round.durationSec} sek)`));
   } else if (round.status === 'active') {
     controls.append(el('div', { class: 'center' }, el('span', { class: 'pill accent' }, `Runde ${round.roundNumber} — spilles nå`)));
     controls.append(el('div', { class: 'timer-ring' }, [
@@ -207,6 +241,9 @@ function fullRender(s) {
     controls.append(el('button', { class: 'btn btn-danger', onclick: reveal }, '⏹ Avslutt runden nå'));
   }
   view.append(controls);
+
+  // Start lokal nedtelling (og lydsignaler) for aktiv runde
+  if (round && round.status === 'active') startTicker(round);
 
   // Spotify + fasit når det er en runde med piece
   if (round && round.piece) {
@@ -236,14 +273,8 @@ function liveUpdate(s) {
   const round = s.round;
   const plist = $('#plist');
   if (plist) renderPlayers(plist, s);
+  // Timeren drives av den lokale telleren (startTicker); her oppdaterer vi kun antall svar
   if (round && round.status === 'active') {
-    const num = $('#timerNum'); if (num) num.textContent = String(round.timeLeft);
-    const bar = $('#timerBar');
-    if (bar) {
-      const pct = Math.max(0, Math.min(100, (round.timeLeft / round.durationSec) * 100));
-      bar.firstChild.style.width = pct + '%';
-      bar.classList.toggle('low', round.timeLeft <= 10);
-    }
     const gc = $('#guessCount'); if (gc) gc.textContent = `${round.guessCount} svar inne`;
   }
 }
@@ -251,8 +282,17 @@ function liveUpdate(s) {
 // --- Handlinger ---
 async function startRound(e) {
   if (busy) return; busy = true;
+  unlockAudio(); // lås opp lyd på lederens enhet (krever brukergest på iOS)
   const btn = e && e.target; if (btn) btn.disabled = true;
   try { await api.startRound(leader.code, leader.leaderToken, {}); lastPhase = null; await poll(); }
+  catch (err) { toast(err.message); if (btn) btn.disabled = false; }
+  finally { busy = false; }
+}
+async function beginRound(e) {
+  if (busy) return; busy = true;
+  unlockAudio();
+  const btn = e && e.target; if (btn) btn.disabled = true;
+  try { await api.beginRound(leader.code, leader.leaderToken); lastPhase = null; await poll(); }
   catch (err) { toast(err.message); if (btn) btn.disabled = false; }
   finally { busy = false; }
 }
@@ -271,6 +311,7 @@ function newGame() {
   store.del('classic-leader');
   leader = null;
   clearInterval(pollTimer);
+  stopTicker();
   renderCreate();
 }
 

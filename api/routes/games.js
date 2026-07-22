@@ -48,7 +48,9 @@ function activeRound(game) {
 }
 
 function timeLeft(round) {
-  if (!round || !round.endsAt) return 0;
+  if (!round) return 0;
+  // «pending» = klar, men tiden er ikke startet ennå → vis full varighet
+  if (round.status === 'pending' || !round.endsAt) return round ? round.durationSec || 0 : 0;
   return Math.max(0, Math.round((new Date(round.endsAt).getTime() - Date.now()) / 1000));
 }
 
@@ -299,15 +301,15 @@ router.post('/:code/start-round', (req, res) => {
   );
   const roundNumber = (game.usedPieceIds || []).length + 1;
   const roundId = generateId();
-  const startedAt = now();
+  // Runden starter i «pending»: lederen cuer musikken, tiden starter med begin-round.
   const round = {
     gameId: game.id,
     pieceId: piece.id,
     roundNumber,
-    status: 'active',
+    status: 'pending',
     durationSec,
-    startedAt,
-    endsAt: new Date(Date.now() + durationSec * 1000).toISOString(),
+    startedAt: null,
+    endsAt: null,
   };
   db.upsertEntity('rounds', game.id, roundId, round);
 
@@ -319,6 +321,20 @@ router.post('/:code/start-round', (req, res) => {
   successResponse(res, {
     round: { id: roundId, ...round, timeLeft: durationSec, piece: publicPiece(piece) },
   });
+});
+
+/** POST /api/games/:code/begin-round — leder starter tiden (etter at musikken er i gang). */
+router.post('/:code/begin-round', (req, res) => {
+  const game = getGameByCode(req.params.code);
+  if (!game) return errorResponse(res, 'Fant ikke spillet', 404);
+  if (!requireLeader(req, res, game)) return;
+  const round = activeRound(game);
+  if (!round || round.status !== 'pending') return errorResponse(res, 'Ingen klargjort runde å starte', 409);
+  round.status = 'active';
+  round.startedAt = now();
+  round.endsAt = new Date(Date.now() + (round.durationSec || DEFAULT_DURATION) * 1000).toISOString();
+  db.upsertEntity('rounds', game.id, round.id, round);
+  successResponse(res, buildState(game, { isLeader: true }));
 });
 
 /** POST /api/games/:code/guess — deltaker sender/oppdaterer gjetning. */
