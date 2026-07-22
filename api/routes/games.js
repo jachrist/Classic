@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
 const { scoreGuess } = require('../lib/scoring');
+const { KINDS, kindOf } = require('../lib/kinds');
 const {
   successResponse,
   errorResponse,
@@ -65,9 +66,11 @@ function leaderboard(gameId) {
 function revealRound(round) {
   if (!round || round.status === 'revealed') return round;
   const piece = db.getEntity('pieces', round.pieceId);
+  const game = db.getEntity('games', round.gameId);
+  const kind = kindOf(game && game.kind);
   const guesses = db.listEntities('guesses', { filter: { roundId: round.id } });
   for (const guess of guesses) {
-    const { total, breakdown } = scoreGuess(guess, piece || {});
+    const { total, breakdown } = scoreGuess(guess, piece || {}, kind);
     guess.total = total;
     guess.breakdown = breakdown;
     db.upsertEntity('guesses', round.id, guess.id, guess);
@@ -108,6 +111,8 @@ function buildState(game, { playerId, isLeader } = {}) {
   let round = activeRound(game);
   round = maybeAutoReveal(round);
 
+  const kind = kindOf(game.kind);
+  const cfg = KINDS[kind];
   const state = {
     game: {
       code: game.code,
@@ -115,6 +120,11 @@ function buildState(game, { playerId, isLeader } = {}) {
       leaderName: game.leaderName,
       settings: game.settings || {},
       roundCount: (game.usedPieceIds || []).length,
+      theme: game.theme || 'Klassisk',
+      kind,
+      kindLabel: cfg.label,
+      labels: cfg.labels,
+      useMovement: cfg.useMovement,
     },
     players: leaderboard(game.id),
     round: null,
@@ -192,6 +202,15 @@ router.post('/', (req, res) => {
     if (!getGameByCode(code)) break;
   }
 
+  // Tema bestemmer tematype (klassisk/pop). Default «Klassisk» hvis ikke oppgitt.
+  let themeName = (req.body.theme || '').trim();
+  let themeRow = themeName ? db.findOne('themes', { name: themeName }) : null;
+  if (!themeRow) {
+    themeRow = db.findOne('themes', { name: 'Klassisk' }) || db.listEntities('themes', { orderBy: 'name' })[0] || null;
+  }
+  themeName = themeRow ? themeRow.name : 'Klassisk';
+  const kind = kindOf(themeRow && themeRow.kind);
+
   const id = generateId();
   const leaderToken = generateToken();
   const durationSec = Math.max(15, Math.min(600, parseInt(req.body.durationSec, 10) || DEFAULT_DURATION));
@@ -200,13 +219,23 @@ router.post('/', (req, res) => {
     status: 'lobby',
     leaderToken,
     leaderName: String(req.body.leaderName).trim(),
+    theme: themeName,
+    kind,
     currentRoundId: null,
     usedPieceIds: [],
     settings: { durationSec },
     createdAt: now(),
   };
   db.upsertEntity('games', 'game', id, game);
-  successResponse(res, { code, leaderToken, game: { code, status: game.status, leaderName: game.leaderName, settings: game.settings } }, 201);
+  successResponse(
+    res,
+    {
+      code,
+      leaderToken,
+      game: { code, status: game.status, leaderName: game.leaderName, theme: themeName, kind, settings: game.settings },
+    },
+    201
+  );
 });
 
 /** POST /api/games/:code/join — deltaker blir med (romkode + kallenavn). */
@@ -242,8 +271,10 @@ router.post('/:code/start-round', (req, res) => {
   const prev = activeRound(game);
   if (prev && prev.status === 'active') revealRound(prev);
 
-  const allPieces = db.listEntities('pieces');
-  if (!allPieces.length) return errorResponse(res, 'Musikkbiblioteket er tomt — legg til stykker i admin først', 409);
+  // Kun stykker fra spillets tema
+  const allPieces = db.listEntities('pieces', { filter: { theme: game.theme || 'Klassisk' } });
+  if (!allPieces.length)
+    return errorResponse(res, `Temaet «${game.theme || 'Klassisk'}» har ingen stykker — legg til noen i admin først`, 409);
 
   const used = new Set(game.usedPieceIds || []);
   let pool = allPieces.filter((p) => !used.has(p.id));

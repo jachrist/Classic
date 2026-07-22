@@ -30,6 +30,7 @@ db.ensureTables();
 seedIfEmpty();
 
 // Ruter
+app.use('/api/themes', require('./routes/themes'));
 app.use('/api/pieces', require('./routes/pieces'));
 app.use('/api/games', require('./routes/games'));
 

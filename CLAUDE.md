@@ -36,17 +36,25 @@ mobil-først, PWA med service worker.
 - `lib/db.js` — hybrid lagringsmodell (`id/partitionKey/<søkbare>/jsonData`) med
   `buildEntity/parseEntity/getEntity/listEntities/upsertEntity/deleteEntity/findOne`.
   Skjema i `TABLE_SCHEMAS`; `ensureTables()` auto-migrerer manglende kolonner.
-  Tabeller: `pieces, games, players, rounds, guesses`.
-- `lib/scoring.js` — poengberegning. Vekter (sum 100): komponist 30, epoke 20,
-  årstall 25, verk 15, sats 10. Årstall gradert (full ±5 år → 0 ved ±60).
-  Tekst: normalisering (fjerner aksenter, katalogforkortelser) + Levenshtein/
-  token-overlapp/delstreng. Juster konstanter øverst i fila.
+  Tabeller: `themes, pieces, games, players, rounds, guesses`. Hvert stykke har et
+  `theme`; hvert `theme` har en `kind` (classical/pop). `seed.js` migrerer gamle
+  stykker uten tema til «Klassisk» ved oppstart.
+- `lib/kinds.js` — **tematyper** («kind»): `classical` og `pop`. Styrer feltnavn
+  og poengvekter. Felles DB-kolonner tolkes ulikt: for pop er `composer`=artist,
+  `epoch`=album, og `movement` brukes ikke. Klassisk: komponist 30/epoke 20/år 25/
+  verk 15/sats 10. Pop: artist 30/album 20/år 25/låt 25 (sum 100 i begge).
+- `lib/scoring.js` — `scoreGuess(guess, piece, kind)`. Årstall gradert (full ±5 år
+  → 0 ved ±60). Tekst: normalisering (fjerner aksenter, katalogforkortelser) +
+  Levenshtein/token-overlapp/delstreng.
 - `lib/epochs.js` — kanoniske epoker med årsintervaller (nedtrekksliste + seeding).
 - `lib/helpers.js` — `successResponse/errorResponse/generateId/generateRoomCode/
   generateToken/validateRequired/now`.
-- `routes/pieces.js` — bibliotek-CRUD + `GET /api/pieces/meta` (komponistliste,
-  epoker, årsintervall til gjetteskjemaet).
-- `routes/games.js` — spill-livssyklus (se under).
+- `routes/themes.js` — CRUD for tema (`GET/POST/PUT/DELETE /api/themes`).
+- `routes/pieces.js` — bibliotek-CRUD + `GET /api/pieces/meta?theme=` (typebevisst:
+  feltnavn/etiketter, artist-/komponistliste, album-/epokeliste, årsintervall).
+- `routes/games.js` — spill-livssyklus. Spillet lagrer `theme` + `kind`; runder
+  trekkes kun fra spillets tema, og poeng beregnes etter typen. `state` gir
+  frontenden `game.theme/kind/labels/useMovement` så skjemaet tilpasser seg.
 - `seed.js` — seeder ~30 kjente stykker i tomt bibliotek (uten Spotify-URL).
 - `server.js` — CORS, JSON, route-mounting, `/api/health`, valgfri statisk
   frontend via `FRONTEND_DIR`.

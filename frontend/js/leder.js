@@ -12,13 +12,31 @@ let lastPieceKey = null;
 let busy = false;
 
 // --- Opprett spill ---
-function renderCreate() {
+async function renderCreate() {
   view.innerHTML = '';
+
+  // Hent tema for nedtrekksliste (gruppert på klassisk/pop)
+  let themes = [];
+  try { themes = (await api.listThemes()).data || []; } catch { themes = []; }
+  const themeSelect = el('select', { id: 'ltheme' });
+  const withPieces = themes.filter((t) => t.count > 0);
+  const byKind = { classical: [], pop: [] };
+  (withPieces.length ? withPieces : themes).forEach((t) => (byKind[t.kind] || (byKind[t.kind] = [])).push(t));
+  const groupLabels = { classical: 'Klassisk', pop: 'Pop' };
+  for (const [kind, list] of Object.entries(byKind)) {
+    if (!list.length) continue;
+    const group = el('optgroup', { label: groupLabels[kind] || kind });
+    list.forEach((t) => group.append(el('option', { value: t.name }, `${t.name} (${t.count})`)));
+    themeSelect.append(group);
+  }
+
   const form = el('form', { class: 'card' }, [
     el('h2', {}, 'Start et nytt spill'),
     el('p', { class: 'sub' }, 'Du blir spill-leder. Deltakerne blir med via romkoden du får.'),
     el('label', { for: 'lname' }, 'Ditt navn'),
     el('input', { id: 'lname', type: 'text', maxlength: '24', placeholder: 'F.eks. Ola', autocomplete: 'off' }),
+    el('label', { for: 'ltheme' }, 'Tema'),
+    themeSelect,
     el('label', { for: 'ldur' }, ['Tid per runde: ', el('b', { id: 'durOut' }, '60'), ' sek']),
     el('input', { id: 'ldur', type: 'range', min: '20', max: '180', step: '5', value: '60' }),
     el('div', { style: 'height:14px' }),
@@ -29,16 +47,18 @@ function renderCreate() {
     e.preventDefault();
     const name = $('#lname').value.trim();
     const dur = +$('#ldur').value;
+    const theme = $('#ltheme').value;
     if (!name) return toast('Skriv inn navnet ditt');
     e.submitter.disabled = true;
     try {
-      const res = await api.createGame(name, dur);
+      const res = await api.createGame(name, dur, theme);
       leader = { code: res.code, leaderToken: res.leaderToken };
       store.set('classic-leader', leader);
       start();
     } catch (err) { toast(err.message); e.submitter.disabled = false; }
   });
   view.append(form);
+  if (!themes.length) view.append(el('p', { class: 'center muted', style: 'font-size:.85rem' }, 'Ingen tema ennå — opprett i Admin.'));
 
   // Gjenoppta forrige økt
   const prev = store.get('classic-leader');
@@ -89,6 +109,8 @@ function render(s) {
 function headerCard(s) {
   const url = joinUrl();
   return el('div', { class: 'card center' }, [
+    el('div', { class: 'center', style: 'margin-bottom:6px' },
+      el('span', { class: 'pill accent' }, `🎼 ${s.game.theme || 'Klassisk'}`)),
     el('div', { class: 'muted', style: 'font-size:.85rem' }, 'Romkode — del med deltakerne'),
     el('div', { class: 'roomcode' }, leader.code),
     el('div', { class: 'btn-row', style: 'justify-content:center' }, [

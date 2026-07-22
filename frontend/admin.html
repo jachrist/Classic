@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#12100f" />
-  <title>Classic — musikkbibliotek</title>
+  <title>Classic — bibliotek & tema</title>
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/css/style.css" />
 </head>
@@ -16,17 +16,43 @@
   </header>
 
   <main class="wrap">
-    <h1>Musikkbibliotek</h1>
-    <p class="lead">Stykkene spill-lederen trekker fra. Legg til Spotify-lenke for innebygd avspilling.</p>
+    <h1>Bibliotek &amp; tema</h1>
+    <p class="lead">Stykkene spill-lederen trekker fra, gruppert i tema (klassisk eller pop).</p>
     <div id="msg"></div>
 
+    <!-- Tema -->
+    <section class="card">
+      <h2>Tema</h2>
+      <div id="themeList" class="muted">Laster…</div>
+      <hr class="divider" />
+      <form id="themeForm">
+        <div class="grid-2">
+          <div>
+            <label for="tName">Nytt tema</label>
+            <input id="tName" type="text" maxlength="40" placeholder="F.eks. 80-tallet" />
+          </div>
+          <div>
+            <label for="tKind">Type</label>
+            <select id="tKind"></select>
+          </div>
+        </div>
+        <div style="height:12px"></div>
+        <button class="btn btn-primary" type="submit">Legg til tema</button>
+        <p class="muted" style="font-size:.82rem">Type styrer feltene: <b>klassisk</b> = komponist/epoke/verk/sats, <b>pop</b> = artist/album/låt.</p>
+      </form>
+    </section>
+
+    <!-- Stykke -->
     <section class="card">
       <h2 id="formTitle">Nytt stykke</h2>
       <form id="pieceForm">
         <input id="pId" type="hidden" />
+        <label for="pTheme">Tema</label>
+        <select id="pTheme" required></select>
+
         <div class="grid-2">
           <div>
-            <label for="pComposer">Komponist</label>
+            <label id="pComposerLabel" for="pComposer">Komponist</label>
             <input id="pComposer" type="text" required placeholder="F.eks. Ludwig van Beethoven" />
           </div>
           <div>
@@ -34,15 +60,29 @@
             <input id="pYear" type="number" required min="500" max="2100" placeholder="1808" />
           </div>
         </div>
-        <label for="pEpoch">Epoke / stil</label>
-        <select id="pEpoch" required></select>
-        <label for="pWork">Verk</label>
+
+        <!-- field2: epoke (klassisk) ELLER album (pop) -->
+        <div id="epochRow">
+          <label for="pEpoch">Epoke / stil</label>
+          <select id="pEpoch"></select>
+        </div>
+        <div id="albumRow" style="display:none">
+          <label for="pAlbum">Album</label>
+          <input id="pAlbum" type="text" maxlength="80" placeholder="F.eks. Nevermind" />
+        </div>
+
+        <label id="pWorkLabel" for="pWork">Verk</label>
         <input id="pWork" type="text" required placeholder="Symfoni nr. 5 c-moll" />
-        <label for="pMovement">Sats <span class="hint">(valgfritt)</span></label>
-        <input id="pMovement" type="text" placeholder="1. sats – Allegro con brio" />
+
+        <div id="movementRow">
+          <label for="pMovement">Sats <span class="hint">(valgfritt)</span></label>
+          <input id="pMovement" type="text" placeholder="1. sats – Allegro con brio" />
+        </div>
+
         <label for="pSpotify">Spotify-lenke <span class="hint">(track/album-URL — valgfritt)</span></label>
         <input id="pSpotify" type="url" placeholder="https://open.spotify.com/track/..." />
         <div id="spotifyHelp" class="muted" style="font-size:.82rem;margin-top:6px"></div>
+
         <div style="height:14px"></div>
         <div class="btn-row">
           <button class="btn btn-primary" type="submit" id="saveBtn">Legg til</button>
@@ -51,12 +91,16 @@
       </form>
     </section>
 
+    <!-- Bibliotek -->
     <section class="card">
       <h2>Bibliotek (<span id="count">0</span>)</h2>
+      <label for="filterTheme">Vis tema</label>
+      <select id="filterTheme"></select>
+      <div style="height:10px"></div>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Komponist</th><th>År</th><th>Epoke</th><th>Verk</th><th>🎧</th><th></th></tr>
+            <tr><th id="thComposer">Komponist</th><th>År</th><th id="thEpoch">Epoke</th><th id="thWork">Verk</th><th>🎧</th><th></th></tr>
           </thead>
           <tbody id="rows"></tbody>
         </table>

@@ -31,16 +31,22 @@ export const api = {
   base: BASE,
   health: () => request('/health'),
 
+  // Tema
+  listThemes: () => request('/themes'),
+  createTheme: (name, kind) => request('/themes', { method: 'POST', body: { name, kind } }),
+  updateTheme: (id, patch) => request(`/themes/${id}`, { method: 'PUT', body: patch }),
+  deleteTheme: (id) => request(`/themes/${id}`, { method: 'DELETE' }),
+
   // Bibliotek
-  meta: () => request('/pieces/meta'),
-  listPieces: () => request('/pieces'),
+  meta: (theme) => request(`/pieces/meta${theme ? `?theme=${encodeURIComponent(theme)}` : ''}`),
+  listPieces: (theme) => request(`/pieces${theme ? `?theme=${encodeURIComponent(theme)}` : ''}`),
   createPiece: (p) => request('/pieces', { method: 'POST', body: p }),
   updatePiece: (id, p) => request(`/pieces/${id}`, { method: 'PUT', body: p }),
   deletePiece: (id) => request(`/pieces/${id}`, { method: 'DELETE' }),
 
   // Spill
-  createGame: (leaderName, durationSec) =>
-    request('/games', { method: 'POST', body: { leaderName, durationSec } }),
+  createGame: (leaderName, durationSec, theme) =>
+    request('/games', { method: 'POST', body: { leaderName, durationSec, theme } }),
   join: (code, name) => request(`/games/${code}/join`, { method: 'POST', body: { name } }),
   state: (code, playerId, leaderToken) => {
     const q = playerId ? `?playerId=${encodeURIComponent(playerId)}` : '';
