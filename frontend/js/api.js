@@ -44,6 +44,7 @@ export const api = {
   updatePiece: (id, p) => request(`/pieces/${id}`, { method: 'PUT', body: p }),
   deletePiece: (id) => request(`/pieces/${id}`, { method: 'DELETE' }),
   resolveSpotify: (theme) => request('/pieces/resolve-spotify', { method: 'POST', body: { theme } }),
+  netCheck: () => request('/pieces/net-check'),
 
   // Spill
   createGame: (leaderName, durationSec, theme) =>

@@ -6,7 +6,7 @@ const db = require('../lib/db');
 const { successResponse, errorResponse, generateId, validateRequired, now } = require('../lib/helpers');
 const { EPOCHS } = require('../lib/epochs');
 const { KINDS, kindOf } = require('../lib/kinds');
-const { resolveMany } = require('../lib/spotify-resolve');
+const { resolveMany, netCheck } = require('../lib/spotify-resolve');
 
 /** Finn tematype ut fra temanavn (default klassisk). */
 function themeKind(themeName) {
@@ -78,6 +78,15 @@ router.post('/resolve-spotify', async (req, res) => {
     successResponse(res, result);
   } catch (err) {
     errorResponse(res, 'Oppslag feilet: ' + (err.message || 'ukjent feil'), 502);
+  }
+});
+
+/** GET /api/pieces/net-check — hva kan serveren nå (diagnostikk for lenke-oppslag). */
+router.get('/net-check', async (req, res) => {
+  try {
+    successResponse(res, { check: await netCheck() });
+  } catch (err) {
+    errorResponse(res, 'Nettsjekk feilet: ' + (err.message || 'ukjent'), 502);
   }
 });
 

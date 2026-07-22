@@ -167,12 +167,36 @@ $('#resolveBtn').addEventListener('click', async () => {
   try {
     const r = await api.resolveSpotify(filterThemeName || undefined);
     toast(`Fant ${r.resolved} av ${r.total} lenker (metode: ${r.method}).`, r.resolved ? 'ok' : 'err');
+    // Vis diagnostikk hvis noe feilet
+    const help = $('#resolveHelp');
+    if (r.failed && r.diagnostics && r.diagnostics.length) {
+      help.innerHTML = `⚠️ ${r.failed} feilet. Årsak: ${escapeHtml(r.diagnostics.join(' · '))}. ` +
+        (r.hasSpotifyCreds ? '' : 'Tips: legg til Spotify-nøkler for mer pålitelig oppslag.');
+    }
     await load();
   } catch (err) {
     toast(err.message);
   } finally {
     btn.disabled = false;
     btn.textContent = orig;
+  }
+});
+
+$('#netCheckBtn').addEventListener('click', async () => {
+  const help = $('#resolveHelp');
+  help.textContent = 'Sjekker hva serveren når…';
+  try {
+    const { check: c } = await api.netCheck();
+    const line = (name, o, key) => `${o.ok ? '✅' : '❌'} ${name} (${o.status || o.error || '—'}${o[key] ? ', treff' : ''})`;
+    help.innerHTML = [
+      `Node ${escapeHtml(c.node)} · fetch: ${c.fetch}`,
+      line('Deezer', c.deezer, 'gotResult'),
+      line('Odesli', c.odesli, 'gotSpotify'),
+      line('iTunes', c.itunes, 'gotResult'),
+      `Spotify-nøkler: ${c.spotifyCreds ? (c.spotifyTokenOk ? '✅ virker' : '❌ satt, men token feilet') : 'ikke satt'}`,
+    ].map((l) => `<div>${l}</div>`).join('');
+  } catch (err) {
+    help.textContent = 'Nettsjekk feilet: ' + err.message;
   }
 });
 
