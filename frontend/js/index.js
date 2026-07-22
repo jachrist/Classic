@@ -28,7 +28,3 @@ $('#joinForm').addEventListener('submit', async (e) => {
     btn.disabled = false;
   }
 });
-
-$('#leaderCard').addEventListener('click', () => {
-  location.href = '/leder.html';
-});
