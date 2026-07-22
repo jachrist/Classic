@@ -8,6 +8,9 @@ const view = $('#view');
 const code = (qs('code') || (store.get('classic-player') || {}).code || '').toUpperCase();
 let session = store.get('classic-player');
 let meta = null;
+let loadedTheme = null;
+let labels = { composer: 'Komponist', epoch: 'Epoke', year: 'Årstall', work: 'Verk', movement: 'Sats' };
+let useMovement = true;
 let lastRoundId = null;
 let lastStatus = null;
 let localGuess = {}; // uinnsendte feltverdier for aktiv runde
@@ -51,6 +54,13 @@ function renderJoin() {
 async function poll() {
   try {
     const s = await api.state(code, session.playerId);
+    // Feltnavn/typer fra spillets tema
+    if (s.game && s.game.labels) labels = s.game.labels;
+    if (s.game) useMovement = !!s.game.useMovement;
+    // Hent meta (nedtrekksvalg) for temaet ved behov
+    if (s.game && s.game.theme && loadedTheme !== s.game.theme) {
+      try { meta = await api.meta(s.game.theme); loadedTheme = s.game.theme; } catch { /* beholder gammel */ }
+    }
     render(s);
   } catch (err) {
     // Spillet kan være borte (server restartet) — la brukeren gå tilbake
@@ -132,16 +142,16 @@ function updateLobby(s) {
   if (parent) parent.textContent = `Deltakere (${s.players.length})`;
 }
 
-function epochOptions(selected) {
-  const opts = [el('option', { value: '' }, '— velg epoke —')];
-  (meta ? meta.epochs : []).forEach((e) =>
+function field2Options(selected) {
+  const opts = [el('option', { value: '' }, `— velg ${labels.epoch.toLowerCase()} —`)];
+  ((meta && (meta.field2Options || meta.epochs)) || []).forEach((e) =>
     opts.push(el('option', { value: e, ...(e === selected ? { selected: 'selected' } : {}) }, e))
   );
   return opts;
 }
-function composerOptions(selected) {
-  const opts = [el('option', { value: '' }, '— velg komponist —')];
-  (meta ? meta.composers : []).forEach((c) =>
+function field1Options(selected) {
+  const opts = [el('option', { value: '' }, `— velg ${labels.composer.toLowerCase()} —`)];
+  ((meta && (meta.field1Options || meta.composers)) || []).forEach((c) =>
     opts.push(el('option', { value: c, ...(c === selected ? { selected: 'selected' } : {}) }, c))
   );
   return opts;
@@ -165,25 +175,33 @@ function renderActive(s) {
   ]);
   view.append(timerCard);
 
-  // Skjema
-  const form = el('form', { class: 'card', id: 'guessForm' }, [
-    el('label', { for: 'gComposer' }, 'Komponist'),
-    el('select', { id: 'gComposer' }, composerOptions(localGuess.composer)),
-    el('label', { for: 'gEpoch' }, 'Epoke / stil'),
-    el('select', { id: 'gEpoch' }, epochOptions(localGuess.epoch)),
-    el('label', { for: 'gYear' }, ['Årstall: ', el('b', { id: 'yearOut' }, String(startYear))]),
+  // Skjema — feltnavn/typer avhenger av temaet (klassisk vs pop)
+  const workPlaceholder = useMovement ? 'F.eks. Symfoni nr. 5' : 'F.eks. Wonderwall';
+  const formChildren = [
+    el('label', { for: 'gComposer' }, labels.composer),
+    el('select', { id: 'gComposer' }, field1Options(localGuess.composer)),
+    el('label', { for: 'gEpoch' }, labels.epoch),
+    el('select', { id: 'gEpoch' }, field2Options(localGuess.epoch)),
+    el('label', { for: 'gYear' }, [`${labels.year}: `, el('b', { id: 'yearOut' }, String(startYear))]),
     el('input', { id: 'gYear', type: 'range', min: String(yr.min), max: String(yr.max), step: '1', value: String(startYear) }),
     el('div', { class: 'muted', style: 'display:flex;justify-content:space-between;font-size:.8rem' }, [
       el('span', {}, String(yr.min)), el('span', {}, String(yr.max)),
     ]),
-    el('label', { for: 'gWork' }, ['Verk ', el('span', { class: 'hint' }, '(fritekst)')]),
-    el('input', { id: 'gWork', type: 'text', maxlength: '80', placeholder: 'F.eks. Symfoni nr. 5', value: localGuess.work || '' }),
-    el('label', { for: 'gMovement' }, ['Sats ', el('span', { class: 'hint' }, '(fritekst, valgfritt)')]),
-    el('input', { id: 'gMovement', type: 'text', maxlength: '80', placeholder: 'F.eks. 1. sats / Allegro', value: localGuess.movement || '' }),
+    el('label', { for: 'gWork' }, [labels.work + ' ', el('span', { class: 'hint' }, '(fritekst)')]),
+    el('input', { id: 'gWork', type: 'text', maxlength: '80', placeholder: workPlaceholder, value: localGuess.work || '' }),
+  ];
+  if (useMovement) {
+    formChildren.push(
+      el('label', { for: 'gMovement' }, [labels.movement + ' ', el('span', { class: 'hint' }, '(fritekst, valgfritt)')]),
+      el('input', { id: 'gMovement', type: 'text', maxlength: '80', placeholder: 'F.eks. 1. sats / Allegro', value: localGuess.movement || '' })
+    );
+  }
+  formChildren.push(
     el('div', { style: 'height:14px' }),
     el('button', { class: 'btn btn-primary', type: 'submit', id: 'submitBtn' }, submittedThisRound ? '✓ Lagret — oppdater svar' : 'Lagre svaret mitt'),
-    el('p', { class: 'center muted', style: 'font-size:.82rem;margin-bottom:0' }, 'Du kan endre svaret helt til tiden er ute.'),
-  ]);
+    el('p', { class: 'center muted', style: 'font-size:.82rem;margin-bottom:0' }, 'Du kan endre svaret helt til tiden er ute.')
+  );
+  const form = el('form', { class: 'card', id: 'guessForm' }, formChildren);
   view.append(form);
 
   // Ledertavle (liten)
@@ -243,8 +261,8 @@ function updateActive(s) {
 function breakdownRows(bd) {
   if (!bd) return el('div');
   const rows = [
-    ['Komponist', bd.composer], ['Epoke', bd.epoch], ['Årstall', bd.year],
-    ['Verk', bd.work], ['Sats', bd.movement],
+    [labels.composer, bd.composer], [labels.epoch, bd.epoch], [labels.year, bd.year],
+    [labels.work, bd.work], [labels.movement, bd.movement],
   ];
   const wrap = el('div', { class: 'breakdown' });
   rows.forEach(([label, b]) => {
@@ -311,6 +329,6 @@ function renderFinished(s) {
 // --- Kjør ---
 (async function init() {
   if (!code) { location.href = '/'; return; }
-  try { meta = (await api.meta()); } catch { meta = { composers: [], epochs: [], yearRange: { min: 1600, max: 2025 } }; }
+  // meta hentes per tema i poll() når spillets tema er kjent
   if (await ensureSession()) start();
 })();

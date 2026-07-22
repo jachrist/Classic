@@ -9,6 +9,9 @@
  *
  * Vektene under summerer til 100 og kan justeres fritt.
  */
+const { KINDS, kindOf } = require('./kinds');
+
+// Beholdt for bakoverkompatibilitet (klassiske vekter); autoritativt i lib/kinds.js.
 const WEIGHTS = {
   composer: 30,
   epoch: 20,
@@ -116,17 +119,24 @@ function textScore(guess, answer, weight) {
 }
 
 /**
- * Beregn poeng for én gjetning mot et stykke (fasit).
- * @returns { total, max, breakdown: { composer, epoch, year, work, movement } }
+ * Beregn poeng for én gjetning mot et stykke (fasit), avhengig av tematype.
+ * For pop brukes ikke `movement`, og vektene er ulike (se lib/kinds.js).
+ * Breakdown-nøklene er alltid composer/epoch/year/work(/movement) — frontenden
+ * setter riktige etiketter (Artist/Album …) ut fra typen.
+ * @returns { total, max, breakdown }
  */
-function scoreGuess(guess, piece) {
+function scoreGuess(guess, piece, kind = 'classical') {
+  const cfg = KINDS[kindOf(kind)];
+  const w = cfg.weights;
   const breakdown = {
-    composer: exactMatchScore(guess.composer, piece.composer, WEIGHTS.composer),
-    epoch: exactMatchScore(guess.epoch, piece.epoch, WEIGHTS.epoch),
-    year: yearScore(guess.year, piece.year, WEIGHTS.year),
-    work: textScore(guess.work, piece.work, WEIGHTS.work),
-    movement: textScore(guess.movement, piece.movement, WEIGHTS.movement),
+    composer: exactMatchScore(guess.composer, piece.composer, w.composer),
+    epoch: exactMatchScore(guess.epoch, piece.epoch, w.epoch),
+    year: yearScore(guess.year, piece.year, w.year),
+    work: textScore(guess.work, piece.work, w.work),
   };
+  if (cfg.useMovement) {
+    breakdown.movement = textScore(guess.movement, piece.movement, w.movement);
+  }
   const total = Object.values(breakdown).reduce((s, b) => s + b.points, 0);
   const max = Object.values(breakdown).reduce((s, b) => s + b.max, 0);
   return { total, max, breakdown };

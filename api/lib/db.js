@@ -33,9 +33,13 @@ db.pragma('foreign_keys = ON');
  * partitionKey + jsonData.
  */
 const TABLE_SCHEMAS = {
+  // Tema (klassisk eller pop) som stykker grupperes under
+  themes: {
+    searchable: ['name', 'kind'],
+  },
   // Musikkbiblioteket — stykkene spill-lederen kan trekke fra
   pieces: {
-    searchable: ['composer', 'year', 'epoch', 'work'],
+    searchable: ['composer', 'year', 'epoch', 'work', 'theme'],
   },
   // Et spill / en «rom»-økt
   games: {
@@ -79,6 +83,7 @@ function ensureTables() {
   }
   // Nyttig ekstra-indeks for raske romkode-oppslag
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_games_code ON games (code)');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_themes_name ON themes (name)');
 }
 
 /** Bygg en radrepresentasjon av en entitet. */

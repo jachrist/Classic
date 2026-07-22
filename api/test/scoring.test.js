@@ -65,4 +65,22 @@ test('tomt fasit-felt gir 0 uten å krasje', () => {
   assert.strictEqual(r.breakdown.work.points, 0);
 });
 
+test('pop: perfekt gjetning gir 100 uten sats', () => {
+  const pop = { composer: 'Nirvana', epoch: 'Nevermind', year: 1991, work: 'Smells Like Teen Spirit', movement: '' };
+  const r = scoreGuess({ composer: 'Nirvana', epoch: 'Nevermind', year: 1992, work: 'Smells Like Teen Spirit' }, pop, 'pop');
+  assert.strictEqual(r.total, 100, `fikk ${r.total}`);
+  assert.strictEqual(r.breakdown.movement, undefined, 'pop skal ikke ha sats');
+  assert.strictEqual(r.breakdown.work.max, 25, 'verk skal være verdt 25 i pop');
+});
+
+test('pop: riktig artist+album, bom på år og låt', () => {
+  const pop = { composer: 'Oasis', epoch: 'Morning Glory', year: 1995, work: 'Wonderwall' };
+  const r = scoreGuess({ composer: 'Oasis', epoch: 'Morning Glory', year: 1930, work: '' }, pop, 'pop');
+  assert.strictEqual(r.breakdown.composer.points, 30);
+  assert.strictEqual(r.breakdown.epoch.points, 20);
+  assert.strictEqual(r.breakdown.year.points, 0);
+  assert.strictEqual(r.breakdown.work.points, 0);
+  assert.strictEqual(r.total, 50);
+});
+
 console.log(`\n${passed} tester ok`);
