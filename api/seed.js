@@ -16,10 +16,15 @@ const { generateId, now } = require('./lib/helpers');
 const SEED_THEMES = [
   { name: 'Klassisk', kind: 'classical' },
   { name: '60-tallet', kind: 'pop' },
+  { name: '70-tallet', kind: 'pop' },
+  { name: '80-tallet', kind: 'pop' },
   { name: '90-tallet', kind: 'pop' },
+  { name: '2000-tallet', kind: 'pop' },
   { name: 'Progrock', kind: 'pop' },
   { name: 'Country', kind: 'pop' },
   { name: 'Flower power', kind: 'pop' },
+  { name: 'Hip-hop', kind: 'pop' },
+  { name: 'Norsk pop', kind: 'pop' },
 ];
 
 const SEED_PIECES = [
@@ -64,12 +69,33 @@ const SEED_POP = {
     { artist: 'Bob Dylan', album: 'Highway 61 Revisited', year: 1965, song: 'Like a Rolling Stone' },
     { artist: 'The Supremes', album: 'Where Did Our Love Go', year: 1964, song: 'Baby Love' },
   ],
+  '70-tallet': [
+    { artist: 'ABBA', album: 'Arrival', year: 1976, song: 'Dancing Queen' },
+    { artist: 'Led Zeppelin', album: 'Led Zeppelin IV', year: 1971, song: 'Stairway to Heaven' },
+    { artist: 'Queen', album: 'A Night at the Opera', year: 1975, song: 'Bohemian Rhapsody' },
+    { artist: 'Bee Gees', album: 'Saturday Night Fever', year: 1977, song: 'Stayin’ Alive' },
+    { artist: 'Fleetwood Mac', album: 'Rumours', year: 1977, song: 'Go Your Own Way' },
+  ],
+  '80-tallet': [
+    { artist: 'Michael Jackson', album: 'Thriller', year: 1982, song: 'Billie Jean' },
+    { artist: 'Madonna', album: 'Like a Virgin', year: 1984, song: 'Like a Virgin' },
+    { artist: 'a-ha', album: 'Hunting High and Low', year: 1985, song: 'Take On Me' },
+    { artist: 'Prince', album: 'Purple Rain', year: 1984, song: 'Purple Rain' },
+    { artist: 'Whitney Houston', album: 'Whitney Houston', year: 1985, song: 'How Will I Know' },
+  ],
   '90-tallet': [
     { artist: 'Nirvana', album: 'Nevermind', year: 1991, song: 'Smells Like Teen Spirit' },
     { artist: 'Oasis', album: '(What’s the Story) Morning Glory?', year: 1995, song: 'Wonderwall' },
     { artist: 'Spice Girls', album: 'Spice', year: 1996, song: 'Wannabe' },
     { artist: 'Backstreet Boys', album: 'Backstreet’s Back', year: 1997, song: 'Everybody (Backstreet’s Back)' },
     { artist: 'TLC', album: 'CrazySexyCool', year: 1994, song: 'Waterfalls' },
+  ],
+  '2000-tallet': [
+    { artist: 'Coldplay', album: 'A Rush of Blood to the Head', year: 2002, song: 'Clocks' },
+    { artist: 'Beyoncé', album: 'Dangerously in Love', year: 2003, song: 'Crazy in Love' },
+    { artist: 'Amy Winehouse', album: 'Back to Black', year: 2006, song: 'Rehab' },
+    { artist: 'The White Stripes', album: 'Elephant', year: 2003, song: 'Seven Nation Army' },
+    { artist: 'Gnarls Barkley', album: 'St. Elsewhere', year: 2006, song: 'Crazy' },
   ],
   Progrock: [
     { artist: 'Pink Floyd', album: 'The Dark Side of the Moon', year: 1973, song: 'Money' },
@@ -91,6 +117,20 @@ const SEED_POP = {
     { artist: 'The Mamas & the Papas', album: 'If You Can Believe Your Eyes and Ears', year: 1966, song: 'California Dreamin’' },
     { artist: 'The Byrds', album: 'Mr. Tambourine Man', year: 1965, song: 'Mr. Tambourine Man' },
     { artist: 'Jefferson Airplane', album: 'Surrealistic Pillow', year: 1967, song: 'White Rabbit' },
+  ],
+  'Hip-hop': [
+    { artist: 'The Notorious B.I.G.', album: 'Ready to Die', year: 1994, song: 'Juicy' },
+    { artist: 'Dr. Dre', album: 'The Chronic', year: 1992, song: 'Nuthin’ but a ‘G’ Thang' },
+    { artist: 'Eminem', album: 'The Marshall Mathers LP', year: 2000, song: 'The Real Slim Shady' },
+    { artist: 'Kanye West', album: 'The College Dropout', year: 2004, song: 'Through the Wire' },
+    { artist: 'Kendrick Lamar', album: 'good kid, m.A.A.d city', year: 2012, song: 'Swimming Pools (Drank)' },
+  ],
+  'Norsk pop': [
+    { artist: 'a-ha', album: 'Hunting High and Low', year: 1985, song: 'The Sun Always Shines on T.V.' },
+    { artist: 'Röyksopp', album: 'Melody A.M.', year: 2001, song: 'Eple' },
+    { artist: 'Kings of Convenience', album: 'Quiet Is the New Loud', year: 2001, song: 'Toxic Girl' },
+    { artist: 'Kygo', album: 'Cloud Nine', year: 2016, song: 'Firestone' },
+    { artist: 'Aurora', album: 'All My Demons Greeting Me as a Friend', year: 2016, song: 'Runaway' },
   ],
 };
 
