@@ -167,11 +167,16 @@ $('#resolveBtn').addEventListener('click', async () => {
   try {
     const r = await api.resolveSpotify(filterThemeName || undefined);
     toast(`Fant ${r.resolved} av ${r.total} lenker (metode: ${r.method}).`, r.resolved ? 'ok' : 'err');
-    // Vis diagnostikk hvis noe feilet
+    // Vis forklaring for de som ikke fikk lenke
     const help = $('#resolveHelp');
     if (r.failed && r.diagnostics && r.diagnostics.length) {
-      help.innerHTML = `⚠️ ${r.failed} feilet. Årsak: ${escapeHtml(r.diagnostics.join(' · '))}. ` +
-        (r.hasSpotifyCreds ? '' : 'Tips: legg til Spotify-nøkler for mer pålitelig oppslag.');
+      const onlyNoMatch = r.diagnostics.every((d) => /ingen treff/.test(d));
+      help.innerHTML = `⚠️ ${r.failed} uten lenke (${escapeHtml(r.diagnostics.join(' · '))}). ` +
+        (onlyNoMatch
+          ? 'Rett skrivemåten på artist/låt i Admin og kjør på nytt, eller lim inn lenken manuelt.'
+          : (r.hasSpotifyCreds ? 'Prøv igjen om litt.' : 'Tips: legg til Spotify-nøkler for mer pålitelig oppslag.'));
+    } else {
+      help.textContent = 'Fyller inn manglende lenker for valgt tema (kjøres på serveren).';
     }
     await load();
   } catch (err) {
