@@ -17,6 +17,8 @@ const KINDS = {
     field2Source: 'epochs', // epoke velges fra fast liste
     useMovement: true,
     weights: { composer: 30, epoch: 20, year: 25, work: 15, movement: 10 },
+    // Årstall spenner over århundrer → romslig slingringsmonn
+    year: { full: 5, zero: 60 },
   },
   pop: {
     label: 'Pop',
@@ -24,6 +26,8 @@ const KINDS = {
     field2Source: 'library', // album velges fra album i temaet
     useMovement: false,
     weights: { composer: 30, epoch: 20, year: 25, work: 25 },
+    // Pop ligger innenfor noen tiår → strengere krav til årstall
+    year: { full: 2, zero: 10 },
   },
 };
 
