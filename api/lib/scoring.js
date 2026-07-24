@@ -88,7 +88,7 @@ function exactMatchScore(guess, answer, weight) {
   return { points: hit ? weight : 0, max: weight, hit, guess: guess || '', answer };
 }
 
-function yearScore(guess, answer, weight) {
+function yearScore(guess, answer, weight, full = YEAR_FULL, zero = YEAR_ZERO) {
   const g = parseInt(guess, 10);
   const a = parseInt(answer, 10);
   if (Number.isNaN(g) || Number.isNaN(a)) {
@@ -96,9 +96,9 @@ function yearScore(guess, answer, weight) {
   }
   const diff = Math.abs(g - a);
   let ratio;
-  if (diff <= YEAR_FULL) ratio = 1;
-  else if (diff >= YEAR_ZERO) ratio = 0;
-  else ratio = (YEAR_ZERO - diff) / (YEAR_ZERO - YEAR_FULL);
+  if (diff <= full) ratio = 1;
+  else if (diff >= zero) ratio = 0;
+  else ratio = (zero - diff) / (zero - full);
   return { points: Math.round(weight * ratio), max: weight, diff, guess: g, answer: a };
 }
 
@@ -128,10 +128,11 @@ function textScore(guess, answer, weight) {
 function scoreGuess(guess, piece, kind = 'classical') {
   const cfg = KINDS[kindOf(kind)];
   const w = cfg.weights;
+  const y = cfg.year || {};
   const breakdown = {
     composer: exactMatchScore(guess.composer, piece.composer, w.composer),
     epoch: exactMatchScore(guess.epoch, piece.epoch, w.epoch),
-    year: yearScore(guess.year, piece.year, w.year),
+    year: yearScore(guess.year, piece.year, w.year, y.full, y.zero),
     work: textScore(guess.work, piece.work, w.work),
   };
   if (cfg.useMovement) {

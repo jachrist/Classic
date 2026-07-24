@@ -83,4 +83,19 @@ test('pop: riktig artist+album, bom på år og låt', () => {
   assert.strictEqual(r.total, 50);
 });
 
+test('pop: årstall 10 år bom gir 0 (strengere enn klassisk)', () => {
+  const pop = { composer: 'Nirvana', epoch: 'Nevermind', year: 1991, work: 'x' };
+  assert.strictEqual(scoreGuess({ year: 2001 }, pop, 'pop').breakdown.year.points, 0);
+  // ±2 år gir fortsatt full
+  assert.strictEqual(scoreGuess({ year: 1993 }, pop, 'pop').breakdown.year.points, 25);
+});
+
+test('pop er strengere på årstall enn klassisk ved samme avvik', () => {
+  const piece = { year: 1990 };
+  const popPts = scoreGuess({ year: 1998 }, piece, 'pop').breakdown.year.points; // 8 år
+  const classPts = scoreGuess({ year: 1998 }, piece, 'classical').breakdown.year.points;
+  assert.ok(popPts < classPts, `pop ${popPts} skal være < klassisk ${classPts}`);
+  assert.ok(popPts <= 7, `pop 8-år-avvik skal gi få poeng, fikk ${popPts}`);
+});
+
 console.log(`\n${passed} tester ok`);
