@@ -190,6 +190,34 @@ function answerCard(piece) {
   ]);
 }
 
+/** Rendrer poengberegning per felt (svar + poeng) for én deltaker inn i `host`. */
+function breakdownRows(host, bd, labels) {
+  if (!bd) return;
+  const rows = [
+    [labels.composer || 'Komponist', bd.composer],
+    [labels.epoch || 'Epoke', bd.epoch],
+    [labels.year || 'Årstall', bd.year],
+    [labels.work || 'Verk', bd.work],
+    [labels.movement || 'Sats', bd.movement],
+  ];
+  rows.forEach(([label, b]) => {
+    if (!b) return;
+    const cls = b.points >= b.max ? 'hit' : b.points > 0 ? 'partial' : 'miss';
+    let detail;
+    if ('diff' in b) {
+      detail = b.diff == null ? 'ikke svart' : `gjettet ${b.guess} — bom ${b.diff} år`;
+    } else if ('similarity' in b) {
+      detail = `gjettet «${b.guess || '—'}»`;
+    } else {
+      detail = (b.hit ? '✓ ' : '') + `gjettet «${b.guess || '—'}»`;
+    }
+    host.append(el('div', { class: `brow ${cls}` }, [
+      el('div', {}, [el('div', { class: 'blabel' }, label), el('div', { class: 'bguess' }, detail)]),
+      el('div', { class: 'bpts' }, `${b.points}/${b.max}`),
+    ]));
+  });
+}
+
 function fullRender(s) {
   view.innerHTML = '';
   stopTicker();
@@ -251,16 +279,31 @@ function fullRender(s) {
     view.append(answerCard(round.piece));
   }
 
-  // Resultater etter avsløring
+  // Resultater etter avsløring — svar + poengberegning per deltaker
   if (round && round.status === 'revealed' && round.results) {
-    const list = el('ul', { class: 'players' });
-    round.results.forEach((r, i) => list.append(el('li', {}, [
-      el('span', { class: 'rank' }, String(i + 1)),
-      el('span', { class: 'pname' }, r.name),
-      el('span', { class: 'pscore' }, `+${r.total}`),
-    ])));
-    if (!round.results.length) list.append(el('li', {}, el('span', { class: 'muted' }, 'Ingen svar denne runden')));
-    view.append(el('div', { class: 'card' }, [el('h2', {}, 'Rundepoeng'), list]));
+    const labels = s.game.labels || {};
+    const card = el('div', { class: 'card' }, [
+      el('h2', {}, 'Rundepoeng og svar'),
+      el('p', { class: 'muted', style: 'font-size:.82rem;margin-top:0' }, 'Trykk på en deltaker for å se svaret og hvordan poengene ble beregnet.'),
+    ]);
+    if (!round.results.length) card.append(el('p', { class: 'muted' }, 'Ingen svar denne runden'));
+    round.results.forEach((r, i) => {
+      const details = el('div', { class: 'breakdown', style: 'display:none;margin:8px 0 4px' });
+      breakdownRows(details, r.breakdown, labels);
+      const head = el('div', {
+        class: 'brow',
+        style: 'grid-template-columns:auto 1fr auto;gap:10px;align-items:center;cursor:pointer',
+      }, [
+        el('span', { class: 'rank' }, i === 0 && r.total > 0 ? '🏆' : String(i + 1)),
+        el('span', { class: 'pname' }, [r.name, ' ', el('span', { class: 'muted', style: 'font-size:.8rem' }, '▾')]),
+        el('span', { class: 'pscore' }, `+${r.total}`),
+      ]);
+      head.addEventListener('click', () => {
+        details.style.display = details.style.display === 'none' ? '' : 'none';
+      });
+      card.append(el('div', { style: 'margin-bottom:8px' }, [head, details]));
+    });
+    view.append(card);
   }
 
   view.append(playersCard(s));
