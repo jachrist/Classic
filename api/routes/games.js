@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
 const { scoreGuess } = require('../lib/scoring');
-const { KINDS, kindOf } = require('../lib/kinds');
+const { KINDS, kindOf, yearToleranceFor } = require('../lib/kinds');
 const {
   successResponse,
   errorResponse,
@@ -70,9 +70,10 @@ function revealRound(round) {
   const piece = db.getEntity('pieces', round.pieceId);
   const game = db.getEntity('games', round.gameId);
   const kind = kindOf(game && game.kind);
+  const yearTol = yearToleranceFor(game && game.theme, kind);
   const guesses = db.listEntities('guesses', { filter: { roundId: round.id } });
   for (const guess of guesses) {
-    const { total, breakdown } = scoreGuess(guess, piece || {}, kind);
+    const { total, breakdown } = scoreGuess(guess, piece || {}, kind, yearTol);
     guess.total = total;
     guess.breakdown = breakdown;
     db.upsertEntity('guesses', round.id, guess.id, guess);
@@ -392,6 +393,35 @@ router.post('/:code/finish', (req, res) => {
   game.status = 'finished';
   db.upsertEntity('games', 'game', game.id, game);
   successResponse(res, { finished: true, players: leaderboard(game.id) });
+});
+
+/**
+ * POST /api/games/:code/change-theme — bytt tema og fortsett med samme deltakere.
+ * Beholder spillere og deres poeng; nullstiller brukte stykker for det nye temaet.
+ */
+router.post('/:code/change-theme', (req, res) => {
+  const game = getGameByCode(req.params.code);
+  if (!game) return errorResponse(res, 'Fant ikke spillet', 404);
+  if (!requireLeader(req, res, game)) return;
+
+  const themeName = (req.body && req.body.theme ? String(req.body.theme) : '').trim();
+  const themeRow = themeName ? db.findOne('themes', { name: themeName }) : null;
+  if (!themeRow) return errorResponse(res, 'Ukjent tema', 404);
+  if (!db.listEntities('pieces', { filter: { theme: themeRow.name } }).length) {
+    return errorResponse(res, `Temaet «${themeRow.name}» har ingen stykker`, 409);
+  }
+
+  // Avslutt evt. aktiv runde før bytte
+  const round = activeRound(game);
+  if (round && round.status === 'active') revealRound(round);
+
+  game.theme = themeRow.name;
+  game.kind = kindOf(themeRow.kind);
+  game.currentRoundId = null;
+  game.usedPieceIds = [];
+  game.status = 'lobby';
+  db.upsertEntity('games', 'game', game.id, game);
+  successResponse(res, buildState(game, { isLeader: true }));
 });
 
 module.exports = router;

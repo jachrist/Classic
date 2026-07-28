@@ -11,6 +11,7 @@ let pollTimer = null;
 let lastPhase = null;
 let lastPieceKey = null;
 let busy = false;
+let curTheme = null; // gjeldende tema (for temavelgeren)
 
 // Lokal sekund-teller (presis nedtelling + lydsignaler)
 let ticker = null;
@@ -38,24 +39,58 @@ function startTicker(round) {
   ticker = setInterval(step, 250);
 }
 
+// --- Tema-hjelpere ---
+async function fetchThemes() {
+  try { return (await api.listThemes()).data || []; } catch { return []; }
+}
+function buildThemeSelect(id, themes, selected) {
+  const sel = el('select', { id });
+  const withPieces = themes.filter((t) => t.count > 0);
+  const byKind = {};
+  (withPieces.length ? withPieces : themes).forEach((t) => (byKind[t.kind] = byKind[t.kind] || []).push(t));
+  const groupLabels = { classical: 'Klassisk', pop: 'Pop' };
+  for (const [kind, list] of Object.entries(byKind)) {
+    if (!list.length) continue;
+    const group = el('optgroup', { label: groupLabels[kind] || kind });
+    list.forEach((t) => group.append(el('option', { value: t.name, ...(t.name === selected ? { selected: 'selected' } : {}) }, `${t.name} (${t.count})`)));
+    sel.append(group);
+  }
+  return sel;
+}
+
+// --- Bytt tema (fortsett med samme deltakere) ---
+async function renderThemePicker() {
+  stopTicker();
+  const themes = await fetchThemes();
+  view.innerHTML = '';
+  const sel = buildThemeSelect('switchTheme', themes, curTheme);
+  view.append(el('div', { class: 'card' }, [
+    el('h2', {}, 'Bytt tema'),
+    el('p', { class: 'muted' }, 'Fortsett med de samme deltakerne og poengene deres — men med et nytt tema.'),
+    el('label', { for: 'switchTheme' }, 'Velg tema'),
+    sel,
+    el('div', { style: 'height:14px' }),
+    el('div', { class: 'btn-row' }, [
+      el('button', { class: 'btn btn-primary', onclick: () => doChangeTheme(sel.value) }, '✔ Bytt til dette temaet'),
+      el('button', { class: 'btn btn-ghost', onclick: () => { lastPhase = null; poll(); } }, 'Avbryt'),
+    ]),
+  ]));
+}
+async function doChangeTheme(theme) {
+  if (!theme) return toast('Velg et tema');
+  if (busy) return; busy = true;
+  try { await api.changeTheme(leader.code, leader.leaderToken, theme); lastPhase = null; await poll(); toast('Byttet tema — poengene er beholdt!', 'ok'); }
+  catch (err) { toast(err.message); }
+  finally { busy = false; }
+}
+
 // --- Opprett spill ---
 async function renderCreate() {
   view.innerHTML = '';
 
   // Hent tema for nedtrekksliste (gruppert på klassisk/pop)
-  let themes = [];
-  try { themes = (await api.listThemes()).data || []; } catch { themes = []; }
-  const themeSelect = el('select', { id: 'ltheme' });
-  const withPieces = themes.filter((t) => t.count > 0);
-  const byKind = { classical: [], pop: [] };
-  (withPieces.length ? withPieces : themes).forEach((t) => (byKind[t.kind] || (byKind[t.kind] = [])).push(t));
-  const groupLabels = { classical: 'Klassisk', pop: 'Pop' };
-  for (const [kind, list] of Object.entries(byKind)) {
-    if (!list.length) continue;
-    const group = el('optgroup', { label: groupLabels[kind] || kind });
-    list.forEach((t) => group.append(el('option', { value: t.name }, `${t.name} (${t.count})`)));
-    themeSelect.append(group);
-  }
+  const themes = await fetchThemes();
+  const themeSelect = buildThemeSelect('ltheme', themes);
 
   const form = el('form', { class: 'card' }, [
     el('h2', {}, 'Start et nytt spill'),
@@ -124,6 +159,7 @@ function joinUrl() {
 
 function render(s) {
   const round = s.round;
+  curTheme = s.game.theme;
   const phase = `${s.game.status}:${round ? round.status : 'none'}:${round ? round.id : ''}`;
   if (phase !== lastPhase) {
     lastPhase = phase;
@@ -232,7 +268,8 @@ function fullRender(s) {
       winner ? el('p', { class: 'lead' }, `Vinner: ${escapeHtml(winner.name)} (${winner.totalScore} p)`) : null,
     ]));
     view.append(playersCard(s));
-    view.append(el('button', { class: 'btn btn-primary', onclick: newGame }, 'Nytt spill'));
+    view.append(el('button', { class: 'btn btn-primary', onclick: renderThemePicker }, '🎚️ Bytt tema og fortsett'));
+    view.append(el('button', { class: 'btn btn-ghost', style: 'margin-top:8px', onclick: newGame }, 'Nytt spill (nullstill)'));
     return;
   }
 
@@ -308,8 +345,11 @@ function fullRender(s) {
 
   view.append(playersCard(s));
 
-  // Avslutt spill
-  view.append(el('button', { class: 'btn btn-ghost', style: 'margin-top:6px', onclick: finishGame }, 'Avslutt hele spillet'));
+  // Bytt tema (fortsett) eller avslutt
+  view.append(el('div', { class: 'btn-row', style: 'margin-top:6px' }, [
+    el('button', { class: 'btn btn-ghost', onclick: renderThemePicker }, '🎚️ Bytt tema'),
+    el('button', { class: 'btn btn-ghost btn-danger', onclick: finishGame }, 'Avslutt spillet'),
+  ]));
 }
 
 function liveUpdate(s) {
