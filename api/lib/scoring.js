@@ -125,10 +125,10 @@ function textScore(guess, answer, weight) {
  * setter riktige etiketter (Artist/Album …) ut fra typen.
  * @returns { total, max, breakdown }
  */
-function scoreGuess(guess, piece, kind = 'classical') {
+function scoreGuess(guess, piece, kind = 'classical', yearTol = null) {
   const cfg = KINDS[kindOf(kind)];
   const w = cfg.weights;
-  const y = cfg.year || {};
+  const y = yearTol || cfg.year || {};
   const breakdown = {
     composer: exactMatchScore(guess.composer, piece.composer, w.composer),
     epoch: exactMatchScore(guess.epoch, piece.epoch, w.epoch),

@@ -3,6 +3,7 @@
 // Enkle assertion-tester for poengberegning (ingen rammeverk).
 const assert = require('assert');
 const { scoreGuess, similarity, normalize } = require('../lib/scoring');
+const { yearToleranceFor, isDecadeTheme } = require('../lib/kinds');
 
 let passed = 0;
 function test(name, fn) {
@@ -96,6 +97,26 @@ test('pop er strengere på årstall enn klassisk ved samme avvik', () => {
   const classPts = scoreGuess({ year: 1998 }, piece, 'classical').breakdown.year.points;
   assert.ok(popPts < classPts, `pop ${popPts} skal være < klassisk ${classPts}`);
   assert.ok(popPts <= 7, `pop 8-år-avvik skal gi få poeng, fikk ${popPts}`);
+});
+
+test('isDecadeTheme kjenner igjen tiårs-tema', () => {
+  assert.ok(isDecadeTheme('90-tallet'));
+  assert.ok(isDecadeTheme('2000-tallet'));
+  assert.ok(!isDecadeTheme('Progrock'));
+  assert.ok(!isDecadeTheme('Klassisk'));
+});
+
+test('tiårs-tema er strengere på årstall enn øvrige pop-tema', () => {
+  const tol = yearToleranceFor('90-tallet', 'pop');
+  assert.deepStrictEqual(tol, { full: 1, zero: 5 });
+  const piece = { year: 1991 };
+  const decadePts = scoreGuess({ year: 1994 }, piece, 'pop', tol).breakdown.year.points; // 3 år bom
+  const genrePts = scoreGuess({ year: 1994 }, piece, 'pop').breakdown.year.points; // default pop {2,10}
+  assert.ok(decadePts < genrePts, `tiårs ${decadePts} < sjanger ${genrePts}`);
+  // 5 år bom → 0 i tiårs-tema
+  assert.strictEqual(scoreGuess({ year: 1996 }, piece, 'pop', tol).breakdown.year.points, 0);
+  // sjanger-tema (ikke tiårs) beholder middels toleranse
+  assert.deepStrictEqual(yearToleranceFor('Progrock', 'pop'), { full: 2, zero: 10 });
 });
 
 console.log(`\n${passed} tester ok`);

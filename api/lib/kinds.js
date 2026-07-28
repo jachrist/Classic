@@ -35,4 +35,23 @@ function kindOf(name) {
   return KINDS[name] ? name : 'classical';
 }
 
-module.exports = { KINDS, kindOf };
+/** Er temaet et «tiårs»-tema (f.eks. «90-tallet», «2000-tallet»)? */
+function isDecadeTheme(name) {
+  return /^\d{2,4}-tallet$/i.test(String(name == null ? '' : name).trim());
+}
+
+/**
+ * Årstall-toleranse ut fra tema + type:
+ *  - Klassisk: romslig (spenner over århundrer).
+ *  - Tiårs-tema: strengt — årstallet ligger innenfor ett tiår, så «rett tiår»
+ *    skal ikke holde; du må treffe nær selve året.
+ *  - Øvrige pop (sjangre som spenner over flere tiår): middels.
+ */
+function yearToleranceFor(themeName, kind) {
+  const k = kindOf(kind);
+  if (k === 'classical') return KINDS.classical.year; // { full: 5, zero: 60 }
+  if (isDecadeTheme(themeName)) return { full: 1, zero: 5 };
+  return KINDS.pop.year; // { full: 2, zero: 10 }
+}
+
+module.exports = { KINDS, kindOf, isDecadeTheme, yearToleranceFor };

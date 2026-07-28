@@ -61,4 +61,6 @@ export const api = {
   guess: (code, guess) => request(`/games/${code}/guess`, { method: 'POST', body: guess }),
   reveal: (code, leaderToken) => request(`/games/${code}/reveal`, { method: 'POST', leaderToken }),
   finish: (code, leaderToken) => request(`/games/${code}/finish`, { method: 'POST', leaderToken }),
+  changeTheme: (code, leaderToken, theme) =>
+    request(`/games/${code}/change-theme`, { method: 'POST', leaderToken, body: { theme } }),
 };
