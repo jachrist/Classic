@@ -102,7 +102,9 @@ test('pop er strengere på årstall enn klassisk ved samme avvik', () => {
 test('isDecadeTheme kjenner igjen tiårs-tema', () => {
   assert.ok(isDecadeTheme('90-tallet'));
   assert.ok(isDecadeTheme('2000-tallet'));
+  assert.ok(isDecadeTheme('Norsk 60-tallspop'));
   assert.ok(!isDecadeTheme('Progrock'));
+  assert.ok(!isDecadeTheme('Norsk pop'));
   assert.ok(!isDecadeTheme('Klassisk'));
 });
 
