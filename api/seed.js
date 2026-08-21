@@ -27,6 +27,7 @@ const SEED_THEMES = [
   { name: 'Flower power', kind: 'pop' },
   { name: 'Hip-hop', kind: 'pop' },
   { name: 'Norsk pop', kind: 'pop' },
+  { name: 'Norsk 60-tallspop', kind: 'pop' },
 ];
 
 const SEED_PIECES = [
@@ -383,6 +384,29 @@ const SEED_POP = {
     { artist: 'Morten Abel', album: 'Some of These Days', year: 1999, song: 'Be My Lover' },
     { artist: 'Sondre Lerche', album: 'Faces Down', year: 2001, song: 'Sleep on Needles' },
     { artist: 'Susanne Sundfør', album: 'Ten Love Songs', year: 2015, song: 'Fade Away' },
+  ],
+  // Norsk populærmusikk fra 60-tallet. MERK: mye ble utgitt som singler, så
+  // «album» = utgivelsens/singelens navn, og enkelte årstall er omtrentlige —
+  // verifiser/juster i Admin. Artist + låt er det som betyr mest for spillet.
+  'Norsk 60-tallspop': [
+    { artist: 'Nora Brockstedt', album: 'Voi Voi', year: 1960, song: 'Voi Voi' },
+    { artist: 'Nora Brockstedt', album: 'Sommer i Palma', year: 1961, song: 'Sommer i Palma' },
+    { artist: 'Nora Brockstedt', album: 'Augustin', year: 1960, song: 'Augustin' },
+    { artist: 'Wenche Myhre', album: 'La meg være ung', year: 1965, song: 'La meg være ung' },
+    { artist: 'Wenche Myhre', album: 'Gi meg en cowboy til mann', year: 1965, song: 'Gi meg en cowboy til mann' },
+    { artist: 'Wenche Myhre', album: 'Vær ikke redd', year: 1963, song: 'Vær ikke redd' },
+    { artist: 'Wenche Myhre', album: 'Byen sover', year: 1966, song: 'Byen sover' },
+    { artist: 'Kirsti Sparboe', album: 'Karusell', year: 1965, song: 'Karusell' },
+    { artist: 'Kirsti Sparboe', album: 'Ronny', year: 1966, song: 'Ronny' },
+    { artist: 'Kirsti Sparboe', album: 'Dukkemann', year: 1967, song: 'Dukkemann' },
+    { artist: 'Kirsti Sparboe', album: 'Å, for et deilig vær', year: 1969, song: 'Å, for et deilig vær' },
+    { artist: 'The Pussycats', album: 'Rør ved meg', year: 1966, song: 'Rør ved meg' },
+    { artist: 'The Pussycats', album: 'The Cat', year: 1966, song: 'The Cat' },
+    { artist: 'The Vanguards', album: 'Susan', year: 1966, song: 'Susan' },
+    { artist: 'Inger Jacobsen', album: 'Kom sol, kom regn', year: 1962, song: 'Kom sol, kom regn' },
+    { artist: 'Anita Thallaug', album: 'Solhverv', year: 1963, song: 'Solhverv' },
+    { artist: 'Åse Kleveland', album: 'Intet er nytt under solen', year: 1966, song: 'Intet er nytt under solen' },
+    { artist: 'Arne Bendiksen', album: 'Spiral', year: 1964, song: 'Spiral' },
   ],
 };
 

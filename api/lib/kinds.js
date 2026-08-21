@@ -35,9 +35,10 @@ function kindOf(name) {
   return KINDS[name] ? name : 'classical';
 }
 
-/** Er temaet et «tiårs»-tema (f.eks. «90-tallet», «2000-tallet»)? */
+/** Er temaet et «tiårs»-tema (nevner et bestemt tiår, f.eks. «90-tallet»,
+ * «2000-tallet» eller «Norsk 60-tallspop»)? Da stilles strengere årstallskrav. */
 function isDecadeTheme(name) {
-  return /^\d{2,4}-tallet$/i.test(String(name == null ? '' : name).trim());
+  return /\d{2,4}-tall/i.test(String(name == null ? '' : name).trim());
 }
 
 /**
