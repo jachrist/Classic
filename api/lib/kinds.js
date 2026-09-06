@@ -42,16 +42,21 @@ function isDecadeTheme(name) {
 }
 
 /**
- * Årstall-toleranse ut fra tema + type:
+ * Årstall-toleranse ut fra tema + type + hvor bredt temaet spenner:
  *  - Klassisk: romslig (spenner over århundrer).
  *  - Tiårs-tema: strengt — årstallet ligger innenfor ett tiår, så «rett tiår»
  *    skal ikke holde; du må treffe nær selve året.
- *  - Øvrige pop (sjangre som spenner over flere tiår): middels.
+ *  - Blandede epoker (svært langt årsspenn, f.eks. «Norske julehits» med salmer
+ *    fra middelalderen ved siden av nye innspillinger): romslig — ellers blir
+ *    årstallet nesten umulig.
+ *  - Øvrige pop (sjangre som spenner over noen tiår): middels.
+ * `yearSpan` = maks-år − min-år for temaets stykker (valgfritt).
  */
-function yearToleranceFor(themeName, kind) {
+function yearToleranceFor(themeName, kind, yearSpan) {
   const k = kindOf(kind);
   if (k === 'classical') return KINDS.classical.year; // { full: 5, zero: 60 }
   if (isDecadeTheme(themeName)) return { full: 1, zero: 5 };
+  if (typeof yearSpan === 'number' && yearSpan > 100) return { full: 5, zero: 60 };
   return KINDS.pop.year; // { full: 2, zero: 10 }
 }
 

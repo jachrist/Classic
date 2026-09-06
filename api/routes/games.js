@@ -70,7 +70,16 @@ function revealRound(round) {
   const piece = db.getEntity('pieces', round.pieceId);
   const game = db.getEntity('games', round.gameId);
   const kind = kindOf(game && game.kind);
-  const yearTol = yearToleranceFor(game && game.theme, kind);
+  // Årsspenn for temaet → romsligere årstall-krav for tema som blander epoker
+  let yearSpan;
+  if (game && game.theme) {
+    const yrs = db
+      .listEntities('pieces', { filter: { theme: game.theme } })
+      .map((p) => parseInt(p.year, 10))
+      .filter((n) => !Number.isNaN(n));
+    if (yrs.length) yearSpan = Math.max(...yrs) - Math.min(...yrs);
+  }
+  const yearTol = yearToleranceFor(game && game.theme, kind, yearSpan);
   const guesses = db.listEntities('guesses', { filter: { roundId: round.id } });
   for (const guess of guesses) {
     const { total, breakdown } = scoreGuess(guess, piece || {}, kind, yearTol);
