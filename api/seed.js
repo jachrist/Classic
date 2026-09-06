@@ -28,6 +28,7 @@ const SEED_THEMES = [
   { name: 'Hip-hop', kind: 'pop' },
   { name: 'Norsk pop', kind: 'pop' },
   { name: 'Norsk 60-tallspop', kind: 'pop' },
+  { name: 'Norske julehits', kind: 'pop' },
 ];
 
 const SEED_PIECES = [
@@ -407,6 +408,42 @@ const SEED_POP = {
     { artist: 'Anita Thallaug', album: 'Solhverv', year: 1963, song: 'Solhverv' },
     { artist: 'Åse Kleveland', album: 'Intet er nytt under solen', year: 1966, song: 'Intet er nytt under solen' },
     { artist: 'Arne Bendiksen', album: 'Spiral', year: 1964, song: 'Spiral' },
+  ],
+  // Norske julehits / julesanger. MERK: dette temaet blander gamle salmer/viser
+  // (opphavsår, «artist» = forfatter/komponist eller «Tradisjonell») med nyere
+  // innspillinger (artist = utøver). «Album» og «årstall» er derfor tolkende og
+  // omtrentlige — juster i Admin. Artist + låt er det viktigste for gjenkjenning.
+  'Norske julehits': [
+    { artist: 'Alf Prøysen', album: 'Musevisa', year: 1946, song: 'Musevisa' },
+    { artist: 'Alf Prøysen', album: 'Julekveldsvisa', year: 1951, song: 'Julekveldsvisa' },
+    { artist: 'Alf Prøysen', album: 'Romjulsdrøm', year: 1965, song: 'Romjulsdrøm' },
+    { artist: 'Oslo Gospel Choir', album: 'En stjerne skinner i natt', year: 1993, song: 'En stjerne skinner i natt' },
+    { artist: 'Oslo Gospel Choir', album: 'Barn av lyset', year: 1996, song: 'Barn av lyset' },
+    { artist: 'Sissel Kyrkjebø', album: 'Innerst i sjelen', year: 1994, song: 'Innerst i sjelen' },
+    { artist: 'Sissel Kyrkjebø & Odd Nordstoga', album: 'Kvelden før julekvelden', year: 2010, song: 'Kvelden før julekvelden' },
+    { artist: 'Jakob Sande', album: 'Det lyser i stille grender', year: 1931, song: 'Det lyser i stille grender' },
+    { artist: 'Margrethe Munthe', album: 'På låven sitter nissen', year: 1911, song: 'På låven sitter nissen' },
+    { artist: 'Eyvind Skeie', album: 'Tenn lys', year: 1984, song: 'Tenn lys' },
+    { artist: 'Marie Wexelsen', album: 'Jeg er så glad hver julekveld', year: 1859, song: 'Jeg er så glad hver julekveld' },
+    { artist: 'Johan Krohn', album: 'Du grønne, glitrende tre, god dag', year: 1863, song: 'Du grønne, glitrende tre, god dag' },
+    { artist: 'Elias Blix', album: 'No koma Guds englar', year: 1875, song: 'No koma Guds englar' },
+    { artist: 'B.S. Ingemann', album: 'Deilig er jorden', year: 1850, song: 'Deilig er jorden' },
+    { artist: 'Franz Gruber', album: 'Glade jul, hellige jul', year: 1818, song: 'Glade jul, hellige jul' },
+    { artist: 'Emmy Köhler', album: 'Nå tennes tusen julelys', year: 1898, song: 'Nå tennes tusen julelys' },
+    { artist: 'Hans Adolph Brorson', album: 'Mitt hjerte alltid vanker', year: 1732, song: 'Mitt hjerte alltid vanker' },
+    { artist: 'Hans Adolph Brorson', album: 'Her kommer dine arme små', year: 1732, song: 'Her kommer dine arme små' },
+    { artist: 'N.F.S. Grundtvig', album: 'Det kimer nå til julefest', year: 1817, song: 'Det kimer nå til julefest' },
+    { artist: 'N.F.S. Grundtvig', album: 'Kimer, I klokker', year: 1856, song: 'Kimer, I klokker' },
+    { artist: 'B.S. Ingemann', album: 'Deilig er den himmel blå', year: 1810, song: 'Deilig er den himmel blå' },
+    { artist: 'N.F.S. Grundtvig', album: 'Fra fjord og fjære', year: 1856, song: 'Fra fjord og fjære' },
+    { artist: 'Tradisjonell', album: 'Så går vi rundt om en enebærbusk', year: 1850, song: 'Så går vi rundt om en enebærbusk' },
+    { artist: 'Tradisjonell', album: 'Et barn er født i Betlehem', year: 1600, song: 'Et barn er født i Betlehem' },
+    { artist: 'Tradisjonell', album: 'Å, jul med din glede', year: 1900, song: 'Å, jul med din glede' },
+    { artist: 'Tradisjonell', album: 'Det hev ei rose sprunge', year: 1599, song: 'Det hev ei rose sprunge' },
+    { artist: 'Tradisjonell', album: 'Eg synger julekvad', year: 1328, song: 'Eg synger julekvad' },
+    { artist: 'Tradisjonell', album: 'O du hellige', year: 1816, song: 'O du hellige' },
+    { artist: 'Tradisjonell', album: 'Rudolf er rød på nesen', year: 1949, song: 'Rudolf er rød på nesen' },
+    { artist: 'Tradisjonell', album: 'Nå vandrer fra hver en verdenskrok', year: 1856, song: 'Nå vandrer fra hver en verdenskrok' },
   ],
 };
 
