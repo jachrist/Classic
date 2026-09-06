@@ -121,4 +121,16 @@ test('tiårs-tema er strengere på årstall enn øvrige pop-tema', () => {
   assert.deepStrictEqual(yearToleranceFor('Progrock', 'pop'), { full: 2, zero: 10 });
 });
 
+test('tema med svært langt årsspenn (blandede epoker) får romslig toleranse', () => {
+  // Julehits spenner fra middelalder til i dag → romslig som klassisk
+  assert.deepStrictEqual(yearToleranceFor('Norske julehits', 'pop', 682), { full: 5, zero: 60 });
+  // Uten stort spenn beholdes middels pop-toleranse
+  assert.deepStrictEqual(yearToleranceFor('Norske julehits', 'pop', 40), { full: 2, zero: 10 });
+  // 8 års bom gir langt mer poeng i et bredt tema enn i et vanlig pop-tema
+  const piece = { year: 1946 };
+  const wide = scoreGuess({ year: 1954 }, piece, 'pop', yearToleranceFor('x', 'pop', 682)).breakdown.year.points;
+  const normal = scoreGuess({ year: 1954 }, piece, 'pop').breakdown.year.points;
+  assert.ok(wide > normal, `bredt ${wide} > vanlig ${normal}`);
+});
+
 console.log(`\n${passed} tester ok`);
